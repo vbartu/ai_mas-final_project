@@ -51,7 +51,7 @@ int get_color_value(string color)
 
 int main () {
 	cout << CLIENT_NAME << endl;
-	cout << "#" << "starting" << endl;
+	cout << "#" << "Starting" << endl;
 
 	string line;
 	getline(cin, line); // #domain
@@ -59,7 +59,7 @@ int main () {
 	getline(cin, line); // #levelname
 	getline(cin, line); // level name
 
-	// Read colors
+	// Parse colors
 	getline(cin, line); // #colors
 	int agent_colors[10] = {};
 	int box_colors[26] = {};
@@ -68,28 +68,67 @@ int main () {
 		int color_end = line.find(":");
 		string color = line.substr(0, color_end);
 
-		int len = line.length();
-
 		for (int i = color_end+2; i < line.length(); i += 3) {
-			char object = line[i];
-			if (object >= '0' and object <= '9') {
-				agent_colors[object-'0'] = get_color_value(color);
+			char obj = line[i];
+			if (obj >= '0' and obj <= '9') {
+				agent_colors[obj - '0'] = get_color_value(color);
 			} else {
-				box_colors[object-'A'] = get_color_value(color);
+				box_colors[obj - 'A'] = get_color_value(color);
 			}
 		}
 
 		getline(cin, line);
 	}
 
-	for (int i=0; i < 10; i++) {
-		printf("#Agent %d: %d\n", i, agent_colors[i]);
-	}
-	for (int i=0; i < 26; i++) {
-		printf("#Box %c: %d\n", i+(int)'A', box_colors[i]);
+	// Parse level size
+	string initial_state_lines[100] = {};
+	int n_rows = 0;
+	int n_cols = 0;
+
+	getline(cin, line);
+	while (line[0] != '#') {
+		initial_state_lines[n_rows++] = line;
+		if (line.length() > n_cols)
+			n_cols = line.length();
+		getline(cin, line);
 	}
 
-	while (getline(cin, line)) {
-		cout << "#" << line << endl;
+
+	// Parse initial state
+	bool walls[n_rows][n_cols] = {};
+	int agents[n_rows][n_cols] = {};
+	char boxes[n_rows][n_cols] = {};
+
+	for (int i = 0; i < n_rows; i++) {
+		line = initial_state_lines[i];
+		for (int j = 0; j < line.length(); j++) {
+			char c = line[j];
+			if (c == ' ') {
+				continue;
+			} else if (c == '+') {
+				walls[i][j] = true;
+			} else if (c >= '0' and c <= '9') {
+				agents[i][j] = c - '0';
+			} else {
+				boxes[i][j] = c;
+			}
+		}
+	}
+
+
+	// Parse goal state
+	char goals[n_rows][n_cols] = {};
+
+	getline(cin, line);
+	for (int i = 0; line[0] != '#'; i++) {
+		for (int j = 0; j < line.length(); j++) {
+			char c = line[j];
+			if (c == ' ' || c == '+') {
+				continue;
+			} else {
+				goals[i][j] = c;
+			}
+		}
+		getline(cin, line);
 	}
 }

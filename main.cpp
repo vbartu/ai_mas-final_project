@@ -2,13 +2,26 @@
 #include <cstdio>
 #include <string>
 
-#define CLIENT_NAME "Final project client"
-
 using namespace std;
 
+#define CLIENT_NAME "Final project client"
 
-enum color_values {BLUE=1, RED, CYAN, PURPLE, GREEN, ORANGE, PINK, GREY, LIGHTBLUE, BROWN};
+enum color_values {
+	BLUE=1,
+	RED,
+	CYAN,
+	PURPLE,
+	GREEN,
+	ORANGE,
+	PINK, 
+	GREY,
+	LIGHTBLUE,
+	BROWN
+};
+
+
 int get_color_value(string color);
+
 int get_color_value(string color)
 {
 	if (color.compare("blue") == 0) {
@@ -35,8 +48,6 @@ int get_color_value(string color)
 	return -1;
 }
 		
-
-
 
 int main () {
 	cout << CLIENT_NAME << endl;
@@ -77,11 +88,6 @@ int main () {
 	for (int i=0; i < 26; i++) {
 		printf("#Box %c: %d\n", i+(int)'A', box_colors[i]);
 	}
-
-
-	
-
-
 
 	while (getline(cin, line)) {
 		cout << "#" << line << endl;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ enum color_values {
 	PURPLE,
 	GREEN,
 	ORANGE,
-	PINK, 
+	PINK,
 	GREY,
 	LIGHTBLUE,
 	BROWN
@@ -47,9 +48,10 @@ int get_color_value(string color)
 	}
 	return -1;
 }
-		
+
 
 int main () {
+	cout << RED << endl;
 	cout << CLIENT_NAME << endl;
 	cout << "#" << "Starting" << endl;
 
@@ -61,8 +63,8 @@ int main () {
 
 	// Parse colors
 	getline(cin, line); // #colors
-	int agent_colors[10] = {};
-	int box_colors[26] = {};
+	vector<int> agent_colors(10);
+	vector<int> box_colors(26);
 	getline(cin, line);
 	while (line[0] != '#') {
 		int color_end = line.find(":");
@@ -95,9 +97,18 @@ int main () {
 
 
 	// Parse initial state
-	bool walls[n_rows][n_cols] = {};
-	int agents[n_rows][n_cols] = {};
-	char boxes[n_rows][n_cols] = {};
+	vector<vector<bool>> walls(n_rows);
+	vector<vector<int>> agents(n_rows);
+	vector<vector<char>> boxes(n_rows);
+	vector<vector<char>> goals(n_rows);
+
+	for (int i; i < n_rows; i++) {
+		walls.push_back(vector<bool>(n_cols));
+		// walls[i] = vector<bool>(n_cols);
+		agents.push_back(vector<int>(n_cols));
+		boxes.push_back(vector<char>(n_cols));
+		goals.push_back(vector<char>(n_cols));
+	}
 
 	for (int i = 0; i < n_rows; i++) {
 		line = initial_state_lines[i];
@@ -115,10 +126,6 @@ int main () {
 		}
 	}
 
-
-	// Parse goal state
-	char goals[n_rows][n_cols] = {};
-
 	getline(cin, line);
 	for (int i = 0; line[0] != '#'; i++) {
 		for (int j = 0; j < line.length(); j++) {
@@ -132,3 +139,7 @@ int main () {
 		getline(cin, line);
 	}
 }
+
+// State.walls = &walls
+// State.boxes = &boxes
+// State.goals = &goals

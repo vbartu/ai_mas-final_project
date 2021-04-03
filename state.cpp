@@ -21,6 +21,7 @@ class State {
 
     final State Mparent;
     final int Mg; // depth
+    int Mhash = 0;
 
     // Constructor
     State(){}
@@ -30,6 +31,7 @@ class State {
         Magent_cols = Aagent_cols;
         Mboxes = Aboxes;
     }
+
 
     State apply_action(vector<Action> joint_action) {
         /*
@@ -89,6 +91,7 @@ class State {
         return copy_state;
     }
 
+
     bool is_goal_state() {
         char goal;
         for (int row = 0; row < State.Mgoals.size(); row++) {
@@ -105,6 +108,7 @@ class State {
         }
         return true;
     }
+
 
     vector<State> get_expanded_states() {
         int num_agents = this->Magent_rows.size();
@@ -150,6 +154,7 @@ class State {
         State._RNG.shuffle(expanded_states);
         return expanded_states;
     }
+
 
     bool is_appplicable(int agent, Action action) {
         int agent_row = this->Magent_rows[agent];
@@ -209,9 +214,11 @@ class State {
         }
     }
 
+
     bool is_free(int row, int col) {
         return (!State.Mwalls[row][col] && this->Mboxes[row][col] == ' ' && agent_at(row,col)) == false;
     }
+
 
     char agent_at(int row, int col) {
         for (int agent = 0; agent < this->Magent_rows.size(); agent++) {
@@ -222,16 +229,99 @@ class State {
         }
     }
 
+
     vector<Action> extract_plan() {
         vector<Action> plan(this->Mg);
         State state = this;
-        while (state.joint_action) {
+        while (state.joint_action != NULL) {
           plan[state.g - 1] = state.joint_action;
           state = state.parent
         }
         return plan;
     }
-  }
+
+
+    int hashCode() {
+        if (this->Mhash == 0) {
+          final int prime = 31;
+          int result = 1;
+          result = prime * result + hashCode(this->Mbox_color);
+          result = prime * result + hashCode(this->Magent_color);
+          result = prime * result + hashCode(this->Mwalls);
+          result = prime * result + hashCode(this->Mgoals);
+          result = prime * result + hashCode(this->Magent_rows);
+          result = prime * result + hashCode(this->Magent_cols);
+          for (int row = 0; row < this->Mboxes.size(); ++row) {
+            for (int col = 0; col < this->Mboxes[row].size(); ++col) {
+              char c = this->Mboxes[row][col];
+              if (c!=0) {
+                result = prime * result + (row * this->Mboxes[row].size() + col) * ;c
+              }
+            }
+          }
+          this->Mhash = result;
+        }
+        return this->Mhash;
+    }
+
+    bool equals(State other) {
+        if (this == other) {
+          return true;
+        }
+        if (! isinstance(other, State)) {
+          return false;
+        }
+        if (this->Magent_rows != other.Magent_rows) {
+          return false;
+        }
+        if (this->Magent_cols != other.Magent_cols) {
+          return false;
+        }
+        if (State.Magent_color != other.Magent_color) {
+          return false;
+        }
+        if (State.Mwalls != other.Mwalls) {
+          return false;
+        }
+        if (this->Mboxes != other.Mboxes) {
+          return false;
+        }
+        if (State.Mbox_color != other.Mbox_color) {
+          return false;
+        }
+        if (State.Mgoals != other.Mgoals) {
+          return false;
+        }
+        return true;
+    }
+
+
+    String repr() {
+        String lines;
+        for (int row = 0; row < this->Mboxes.size(); row++) {
+          String line;
+          for (int col = 0; col < this->Mboxes[row].size(); col++) {
+            if (this->Mboxes[row][col] != ' ') {
+              line.append(this->Mboxes[row][col]);
+            }
+            else if (State.Mwalls[row][col] != false) {
+              line.append('+');
+            }
+            else if (agent_at(row,col) != false) {
+              line.append(agent_at(row,col));
+            }
+            else {
+              line.append(' ');
+            }
+          }
+          for (int i = 1; i < line.lenght(); i += 3) {
+            line(i, ' ');
+          }
+          lines.append(line);
+          lines.append('\n');
+        }
+        return lines;
+    }
 
 
 int main() {

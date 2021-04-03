@@ -5,72 +5,126 @@
 
 using namespace std;
 
-enum class action_type {
-	NOOP = 0,
-	MOVE,
-	PUSH,
-  PULL
+enum ActionType {
+	NoOp = 0,
+	Move,
+	Push,
+  Pull,
 };
 
-class Action {
-  public:
-    string name;
-    int type;
-    int ard; // horisontal displacement agent
-    int acd; // vertical displacement agent
-    int brd; // horisontal displacement box
-    int bcd; //vertical displacement box
+enum Action {
 
-    Action() {};
+		NoOp("NoOp", ActionType.NoOp, 0, 0, 0, 0),
 
-    // Action(string Aname, int Atype, int Aard, int Aacd, int Abrd, int Abcd){
-    //   name = Aname;
-    //   type = Atype;
-    //   ard = Aard;
-    //   acd = Aacd;
-    //   brd = Abrd;
-    //   bcd = Abcd;
-    // };
+	  MoveN("Move(N)", ActionType.Move, -1, 0, 0, 0),
+	  MoveS("Move(S)", ActionType.Move, 1, 0, 0, 0),
+	  MoveE("Move(E)", ActionType.Move, 0, 1, 0, 0),
+	  MoveW("Move(W)", ActionType.Move, 0, -1, 0, 0),
 
-    void NoOp() {
-      name = "NoOp";
-      type = NOOP;
-      ard = 0;
-      acd = 0;
-      brd = 0;
-      bcd = 0;
-      cout << "ok ciao" << endl;
-    }
-    // void NoOp(string "NoOp", int type = NOOP, int ard = 0, int acd = 0, int brd = 0, int bcd = 0) {};
+		PushNN("Push(N,N)", ActionType.PUSH, -1, 0, -1, 0),
+		PushNE("Push(N,E)", ActionType.PUSH, -1, 0, 0, 1),
+		PushNW("Push(N,W)", ActionType.PUSH, -1, 0, 0, -1),
+		PushSS("Push(S,S)", ActionType.PUSH, 1, 0, 1, 0),
+		PushSE("Push(S,E)", ActionType.PUSH, 1, 0, 0, 1),
+		PushSW("Push(S,W)", ActionType.PUSH, 1, 0, 0, -1),
+		PushEN("Push(E,N)", ActionType.PUSH, 0, 1, -1, 0),
+		PushES("Push(E,S)", ActionType.PUSH, 0, 1, 1, 0),
+		PushEE("Push(E,E)", ActionType.PUSH, 0, 1, 0, 1),
+		PushWN("Push(W,N)", ActionType.PUSH, 0, -1, -1, 0),
+		PushWS("Push(W,S)", ActionType.PUSH, 0, -1, 1, 0),
+		PushWW("Push(W,W)", ActionType.PUSH, 0, -1, 0, -1),
+
+		PullNN("Pull(N,N)", ActionType.PULL, -1, 0, -1, 0),
+		PullNE("Pull(N,E)", ActionType.PULL, -1, 0, 0, 1),
+		PullNW("Pull(N,W)", ActionType.PULL, -1, 0, 0, -1),
+		PullSS("Pull(S,S)", ActionType.PULL, 1, 0, 1, 0),
+		PullSE("Pull(S,E)", ActionType.PULL, 1, 0, 0, 1),
+		PullSW("Pull(S,W)", ActionType.PULL, 1, 0, 0, -1),
+		PullEN("Pull(E,N)", ActionType.PULL, 0, 1, -1, 0),
+		PullES("Pull(E,S)", ActionType.PULL, 0, 1, 1, 0),
+		PullEE("Pull(E,E)", ActionType.PULL, 0, 1, 0, 1),
+		PullWE("Pull(W,N)", ActionType.PULL, 0,-1, -1, 0),
+		PullWS("Pull(W,S)", ActionType.PULL, 0,-1, 1, 0),
+		PullWW("Pull(W,W)", ActionType.PULL, 0,-1, 0, -1);
+
+		final name;
+	  final ActionType type;
+	  final agentRowDelta; // vertical displacement of agent (-1,0,+1)
+	  final agentColDelta; // horisontal displacement of agent (-1,0,+1)
+	  final boxRowDelta; // vertical diplacement of box (-1,0,+1)
+	  final boxColDelta; // horisontal displacement of box (-1,0,+1)
+
+	  Action(String name, ActionType type, int ard, int acd, int brd, int bcd)
+	  {
+	      this.name = name;
+	      this.type = type;
+	      this.agentRowDelta = ard;
+	      this.agentColDelta = acd;
+	      this.boxRowDelta = brd;
+	      this.boxColDelta = bcd;
+	  }
+}
+
+
+// class Action {
+//   public:
+//      name;
+//      type;
+//      ard; // horisontal displacement agent
+//      acd; // vertical displacement agent
+//      brd; // horisontal displacement box
+//      bcd; //vertical displacement box
+//
+//     Action();
+//
+//     Action( Aname,  Atype,  Aard,  Aacd,  Abrd,  Abcd){
+//       name = Aname;
+//       type = Atype;
+//       ard = Aard;
+//       acd = Aacd;
+//       brd = Abrd;
+//       bcd = Abcd;
+//     };
+//
+//      NoOp() {
+//       name = "NoOp";
+//       type = NOOP;
+//       ard = 0;
+//       acd = 0;
+//       brd = 0;
+//       bcd = 0;
+//     }
+
+    //  NoOp( "NoOp",  type = NOOP,  ard = 0,  acd = 0,  brd = 0,  bcd = 0);
     //
-    // void MoveN(string "Move(N)", int Atype = MOVE, int Aard = -1, int Aacd = 0, int Abrd = 0, int Abcd = 0) {};
-    // void MoveS(string "Move(S)", int Atype = MOVE, int Aard = 1, int Aacd = 0, int Abrd = 0, int Abcd = 0) {};
-    // void MoveE(string "Move(E)", int Atype = MOVE, int Aard = 0, int Aacd = 1, int Abrd = 0, int Abcd = 0) {};
-    // void MoveW(string "Move(W)", int Atype = MOVE, int Aard = 0, int Aacd = -1, int Abrd = 0, int Abcd = 0) {};
+    //  MoveN( "Move(N)",  ActionType.MOVE,  -1, , 0, 0);
+    //  MoveS( "Move(S)",  ActionType.MOVE,  1, , 0, 0);
+    //  MoveE( "Move(E)",  ActionType.MOVE,  0,1, 0, 0);
+    //  MoveW( "Move(W)",  ActionType.MOVE,  0,-1, 0, 0);
     //
-    // void PushNN(string "Push(N,N)", int Atype = PUSH, int Aard = -1, int Aacd = 0, int Abrd = -1, int Abcd = 0) {};
-    // void PushNE(string "Push(N,E)", int Atype = PUSH, int Aard = -1, int Aacd = 0, int Abrd = 0, int Abcd = 1) {};
-    // void PushNW(string "Push(N,W)", int Atype = PUSH, int Aard = -1, int Aacd = 0, int Abrd = -0, int Abcd = -1) {};
-    // void PushSS(string "Push(S,S)", int Atype = PUSH, int Aard = 1, int Aacd = 0, int Abrd = 1, int Abcd = 0) {};
-    // void PushSE(string "Push(S,E)", int Atype = PUSH, int Aard = 1, int Aacd = 0, int Abrd = 0, int Abcd = 1) {};
-    // void PushSW(string "Push(S,W)", int Atype = PUSH, int Aard = 1, int Aacd = 0, int Abrd = 0, int Abcd = -1) {};
-    // void PushEN(string "Push(E,N)", int Atype = PUSH, int Aard = 0, int Aacd = 1, int Abrd = -1, int Abcd = 0) {};
-    // void PushES(string "Push(E,S)", int Atype = PUSH, int Aard = 0, int Aacd = 1, int Abrd = 1, int Abcd = 0) {};
-    // void PushEE(string "Push(E,E)", int Atype = PUSH, int Aard = 0, int Aacd = 1, int Abrd = 0, int Abcd = 1) {};
-    // void PushWN(string "Push(W,N)", int Atype = PUSH, int Aard = 0, int Aacd = -1, int Abrd = -1, int Abcd = 0) {};
-    // void PushWS(string "Push(W,S)", int Atype = PUSH, int Aard = 0, int Aacd = -1, int Abrd = 1, int Abcd = 0) {};
-    // void PushWW(string "Push(W,W)", int Atype = PUSH, int Aard = 0, int Aacd = -1, int Abrd = 0, int Abcd = -1) {};
-    //
-    // void PullNN(string "Pull(N,N)", int Atype = PULL, int Aard = -1, int Aacd = 0, int Abrd = -1, int Abcd = 0) {};
-    // void PullNE(string "Pull(N,E)", int Atype = PULL, int Aard = -1, int Aacd = 0, int Abrd = 0, int Abcd = 1) {};
-    // void PullNW(string "Pull(N,W)", int Atype = PULL, int Aard = -1, int Aacd = 0, int Abrd = 0, int Abcd = -1) {};
-    // void PullSS(string "Pull(S,S)", int Atype = PULL, int Aard = 1, int Aacd = 0, int Abrd = 1, int Abcd = 0) {};
-    // void PullSE(string "Pull(S,E)", int Atype = PULL, int Aard = 1, int Aacd = 0, int Abrd = 0, int Abcd = 1) {};
-    // void PullSW(string "Pull(S,W)", int Atype = PULL, int Aard = 1, int Aacd = 0, int Abrd = 0, int Abcd = -1) {};
-    // void PullEN(string "Pull(E,N)", int Atype = PULL, int Aard = 0, int Aacd = 1, int Abrd = -1, int Abcd = 0) {};
-    // void PullES(string "Pull(E,S)", int Atype = PULL, int Aard = 0, int Aacd = 1, int Abrd = 1, int Abcd = 0) {};
-    // void PullEE(string "Pull(E,E)", int Atype = PULL, int Aard = 0, int Aacd = 1, int Abrd = 0, int Abcd = 1) {};
-    // void PullWE(string "Pull(W,N)", int Atype = PULL, int Aard = 0, int Aacd = -1, int Abrd = -1, int Abcd = 0) {};
-    // void PullWS(string "Pull(W,S)", int Atype = PULL, int Aard = 0, int Aacd = -1, int Abrd = 1, int Abcd = 0) {};
-    // void PullWW(string "Pull(W,W)", int Atype = PULL, int Aard = 0, int Aacd = -1, int Abrd = 0, int Abcd =-1) {};
-};
+//      PushNN( "Push(N,N)",  ActionType.PUSH,  -1, , -1, 0);
+//      PushNE( "Push(N,E)",  ActionType.PUSH,  -1, , 0, 1);
+//      PushNW( "Push(N,W)",  ActionType.PUSH,  -1, , -0, -1);
+//      PushSS( "Push(S,S)",  ActionType.PUSH,  1, , 1, 0);
+//      PushSE( "Push(S,E)",  ActionType.PUSH,  1, , 0, 1);
+//      PushSW( "Push(S,W)",  ActionType.PUSH,  1, , 0, -1);
+//      PushEN( "Push(E,N)",  ActionType.PUSH,  0,1, -1, 0);
+//      PushES( "Push(E,S)",  ActionType.PUSH,  0,1, 1, 0);
+//      PushEE( "Push(E,E)",  ActionType.PUSH,  0,1, 0, 1);
+//      PushWN( "Push(W,N)",  ActionType.PUSH,  0,-1, -1, 0);
+//      PushWS( "Push(W,S)",  ActionType.PUSH,  0,-1, 1, 0);
+//      PushWW( "Push(W,W)",  ActionType.PUSH,  0,-1, 0, -1);
+//
+//      PullNN( "Pull(N,N)",  ActionType.PULL,  -1, , -1, 0);
+//      PullNE( "Pull(N,E)",  ActionType.PULL,  -1, , 0, 1);
+//      PullNW( "Pull(N,W)",  ActionType.PULL,  -1, , 0, -1);
+//      PullSS( "Pull(S,S)",  ActionType.PULL,  1, , 1, 0);
+//      PullSE( "Pull(S,E)",  ActionType.PULL,  1, , 0, 1);
+//      PullSW( "Pull(S,W)",  ActionType.PULL,  1, , 0, -1);
+//      PullEN( "Pull(E,N)",  ActionType.PULL,  0,1, -1, 0);
+//      PullES( "Pull(E,S)",  ActionType.PULL,  0,1, 1, 0);
+//      PullEE( "Pull(E,E)",  ActionType.PULL,  0,1, 0, 1);
+//      PullWE( "Pull(W,N)",  ActionType.PULL,  0,-1, -1, 0);
+//      PullWS( "Pull(W,S)",  ActionType.PULL,  0,-1, 1, 0);
+//      PullWW( "Pull(W,W)",  ActionType.PULL,  0,-1, 0,  Abcd =-1);
+// };

@@ -74,19 +74,3 @@ class Action {
     // void PullWS(string "Pull(W,S)", int Atype = PULL, int Aard = 0, int Aacd = -1, int Abrd = 1, int Abcd = 0) {};
     // void PullWW(string "Pull(W,W)", int Atype = PULL, int Aard = 0, int Aacd = -1, int Abrd = 0, int Abcd =-1) {};
 };
-
-// int main(){
-//
-//   Action action;
-//   action.NoOp();
-//
-//   vector<int> act = {{0}, {1}};
-//
-//   for (int i = 0; i < act.size(); i++) {
-//     if (act[i] == NOOP) {
-//       cout << "ok"<< endl;
-//     }
-//   }
-//
-//   return 0;
-// }

@@ -20,9 +20,11 @@ int main () {
 	getline(cin, line); // level name
 
 	// Parse colors
+
+	vector<int> agent_colors;
+	vector<int> box_colors;
+
 	getline(cin, line); // #colors
-	vector<int> agent_colors(10);
-	vector<int> box_colors(26);
 	getline(cin, line);
 	while (line[0] != '#') {
 		int color_end = line.find(":");
@@ -32,18 +34,21 @@ int main () {
 			char obj = line[i];
 			if (obj >= '0' and obj <= '9') {
 				agent_colors[obj - '0'] = get_color_value(color);
+				ag_count +=1;
 			} else {
 				box_colors[obj - 'A'] = get_color_value(color);
+				box_count += 1;
 			}
 		}
-
 		getline(cin, line);
 	}
 
+
+
 	// Parse level size
 	string initial_state_lines[100] = {};
-	int n_rows = 0;
-	int n_cols = 0;
+	int n_rows;
+	int n_cols;
 
 	getline(cin, line);
 	while (line[0] != '#') {
@@ -56,19 +61,19 @@ int main () {
 
 	// Parse initial state
 	vector<vector<bool>> walls(n_rows);
-	vector<vector<int>> agents(n_rows);
 	vector<vector<char>> boxes(n_rows);
 	vector<vector<char>> goals(n_rows);
 
-	for (int i; i < n_rows; i++) {
-		walls.push_back(vector<bool>(n_cols));
-		// walls[i] = vector<bool>(n_cols);
-		agents.push_back(vector<int>(n_cols));
-		boxes.push_back(vector<char>(n_cols));
-		goals.push_back(vector<char>(n_cols));
+	for (int i= 0; i < n_rows; i++) {
+		walls.push_back(vector<bool>(n_cols,false));
+		boxes.push_back(vector<char>(n_cols, ' '));
+		goals.push_back(vector<char>(n_cols,' '));
 	}
 
-	for (int i = 0; i < n_rows; i++) {
+	vector<int> agent_rows;
+	vector<int> agent_cols;
+
+	for (int i= 0; i < n_rows; i++) {
 		line = initial_state_lines[i];
 		for (int j = 0; j < line.length(); j++) {
 			char c = line[j];
@@ -76,13 +81,15 @@ int main () {
 				continue;
 			} else if (c == '+') {
 				walls[i][j] = true;
-			} else if (c >= '0' and c <= '9') {
-				agents[i][j] = c - '0';
+			} else if ('0' <= c && c <= '9') {
+				agent_rows.push_back(i);
+				agent_cols.push_back(j);
 			} else {
 				boxes[i][j] = c;
 			}
 		}
 	}
+
 
 	getline(cin, line);
 	for (int i = 0; line[0] != '#'; i++) {
@@ -96,8 +103,12 @@ int main () {
 		}
 		getline(cin, line);
 	}
-}
 
-// State.walls = &walls
-// State.boxes = &boxes
-// State.goals = &goals
+	return 0;
+	// State.Magent_color = agent_colors;
+	// State.walls = walls;
+	// State.boxes = boxes;
+	// State.goals = goals;
+	// return State state(agent_rows, agent_cols, boxes);
+
+}

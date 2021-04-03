@@ -16,7 +16,7 @@ class State {
     vector<vector<char>> Mboxes;
     static vector<vector <char>> Mwalls;
     static vector<vector <char>> Mgoals;
-    static vector<char> Magent_color;
+    static vector<int> Magent_color;
     vector<Action> Mjoint_action;
 
     final State Mparent;
@@ -110,7 +110,7 @@ class State {
         int num_agents = this->Magent_rows.size();
 
         // Determine list of applicable action for each individual agent
-        vector<Action> applicable_actions;
+        vector<vector<Action>> applicable_actions;
         for (int agent = 0; agent < num_agents; agent++) {
           // for (action in Action) {
             if (this->is_applicable(agent, action)) {
@@ -223,7 +223,7 @@ class State {
     }
 
     vector<Action> extract_plan() {
-        vector<Action> plan(State.Mg);
+        vector<Action> plan(this->Mg);
         State state = this;
         while (state.joint_action) {
           plan[state.g - 1] = state.joint_action;

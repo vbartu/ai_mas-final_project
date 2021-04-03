@@ -6,15 +6,31 @@
 using namespace std;
 
 enum ActionType {
-	NoOp = 0,
+	NOOP = 0,
 	Move,
 	Push,
   Pull,
 };
 
-enum Action {
+enum Action { 
+public:
+	final name;
+	final ActionType type;
+	final agentRowDelta; // vertical displacement of agent (-1,0,+1)
+	final agentColDelta; // horisontal displacement of agent (-1,0,+1)
+	final boxRowDelta; // vertical diplacement of box (-1,0,+1)
+	final boxColDelta; // horisontal displacement of box (-1,0,+1)
 
-		NoOp("NoOp", ActionType.NoOp, 0, 0, 0, 0),
+	Action(String name, ActionType type, int ard, int acd, int brd, int bcd)
+	{
+			this.name = name;
+			this.type = type;
+			this.agentRowDelta = ard;
+			this.agentColDelta = acd;
+			this.boxRowDelta = brd;
+			this.boxColDelta = bcd;
+	}
+		NoOp("NoOp", ActionType.NOOP, 0, 0, 0, 0),
 
 	  MoveN("Move(N)", ActionType.Move, -1, 0, 0, 0),
 	  MoveS("Move(S)", ActionType.Move, 1, 0, 0, 0),
@@ -45,24 +61,7 @@ enum Action {
 		PullEE("Pull(E,E)", ActionType.PULL, 0, 1, 0, 1),
 		PullWE("Pull(W,N)", ActionType.PULL, 0,-1, -1, 0),
 		PullWS("Pull(W,S)", ActionType.PULL, 0,-1, 1, 0),
-		PullWW("Pull(W,W)", ActionType.PULL, 0,-1, 0, -1);
-
-		final name;
-	  final ActionType type;
-	  final agentRowDelta; // vertical displacement of agent (-1,0,+1)
-	  final agentColDelta; // horisontal displacement of agent (-1,0,+1)
-	  final boxRowDelta; // vertical diplacement of box (-1,0,+1)
-	  final boxColDelta; // horisontal displacement of box (-1,0,+1)
-
-	  Action(String name, ActionType type, int ard, int acd, int brd, int bcd)
-	  {
-	      this.name = name;
-	      this.type = type;
-	      this.agentRowDelta = ard;
-	      this.agentColDelta = acd;
-	      this.boxRowDelta = brd;
-	      this.boxColDelta = bcd;
-	  }
+		PullWW("Pull(W,W)", ActionType.PULL, 0,-1, 0, -1)
 }
 
 

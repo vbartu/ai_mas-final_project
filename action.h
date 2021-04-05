@@ -1,129 +1,290 @@
 #include <vector>
 #include <string>
-#include <iostream>
-#include <cstdio>
 
 using namespace std;
 
+#define lenActionList 29
+
 enum ActionType {
 	NOOP = 0,
-	Move,
-	Push,
-  Pull,
+	MOVE,
+	PUSH,
+  PULL
 };
 
-enum Action { 
-public:
-	final name;
-	final ActionType type;
-	final agentRowDelta; // vertical displacement of agent (-1,0,+1)
-	final agentColDelta; // horisontal displacement of agent (-1,0,+1)
-	final boxRowDelta; // vertical diplacement of box (-1,0,+1)
-	final boxColDelta; // horisontal displacement of box (-1,0,+1)
+class Action {
+  public:
+    string name;
+    int type;
+    int ard; // horisontal displacement agent
+    int acd; // vertical displacement agent
+    int brd; // horisontal displacement box
+    int bcd; //vertical displacement box
 
-	Action(String name, ActionType type, int ard, int acd, int brd, int bcd)
-	{
-			this.name = name;
-			this.type = type;
-			this.agentRowDelta = ard;
-			this.agentColDelta = acd;
-			this.boxRowDelta = brd;
-			this.boxColDelta = bcd;
-	}
-		NoOp("NoOp", ActionType.NOOP, 0, 0, 0, 0),
+		Action(int x) {
 
-	  MoveN("Move(N)", ActionType.Move, -1, 0, 0, 0),
-	  MoveS("Move(S)", ActionType.Move, 1, 0, 0, 0),
-	  MoveE("Move(E)", ActionType.Move, 0, 1, 0, 0),
-	  MoveW("Move(W)", ActionType.Move, 0, -1, 0, 0),
+			switch (x) {
 
-		PushNN("Push(N,N)", ActionType.PUSH, -1, 0, -1, 0),
-		PushNE("Push(N,E)", ActionType.PUSH, -1, 0, 0, 1),
-		PushNW("Push(N,W)", ActionType.PUSH, -1, 0, 0, -1),
-		PushSS("Push(S,S)", ActionType.PUSH, 1, 0, 1, 0),
-		PushSE("Push(S,E)", ActionType.PUSH, 1, 0, 0, 1),
-		PushSW("Push(S,W)", ActionType.PUSH, 1, 0, 0, -1),
-		PushEN("Push(E,N)", ActionType.PUSH, 0, 1, -1, 0),
-		PushES("Push(E,S)", ActionType.PUSH, 0, 1, 1, 0),
-		PushEE("Push(E,E)", ActionType.PUSH, 0, 1, 0, 1),
-		PushWN("Push(W,N)", ActionType.PUSH, 0, -1, -1, 0),
-		PushWS("Push(W,S)", ActionType.PUSH, 0, -1, 1, 0),
-		PushWW("Push(W,W)", ActionType.PUSH, 0, -1, 0, -1),
+				case 0:
+					name = "NoOp";
+					type = NOOP;
+					ard = 0;
+					acd = 0;
+					brd = 0;
+					bcd = 0;
+					break;
 
-		PullNN("Pull(N,N)", ActionType.PULL, -1, 0, -1, 0),
-		PullNE("Pull(N,E)", ActionType.PULL, -1, 0, 0, 1),
-		PullNW("Pull(N,W)", ActionType.PULL, -1, 0, 0, -1),
-		PullSS("Pull(S,S)", ActionType.PULL, 1, 0, 1, 0),
-		PullSE("Pull(S,E)", ActionType.PULL, 1, 0, 0, 1),
-		PullSW("Pull(S,W)", ActionType.PULL, 1, 0, 0, -1),
-		PullEN("Pull(E,N)", ActionType.PULL, 0, 1, -1, 0),
-		PullES("Pull(E,S)", ActionType.PULL, 0, 1, 1, 0),
-		PullEE("Pull(E,E)", ActionType.PULL, 0, 1, 0, 1),
-		PullWE("Pull(W,N)", ActionType.PULL, 0,-1, -1, 0),
-		PullWS("Pull(W,S)", ActionType.PULL, 0,-1, 1, 0),
-		PullWW("Pull(W,W)", ActionType.PULL, 0,-1, 0, -1)
-}
+				case 1:
+					name = "Move(N)";
+					type = MOVE;
+					ard = -1;
+					acd = 0;
+					brd = 0;
+					bcd = 0;
+					break;
 
+				case 2:
+					name = "Move(S)";
+					type = MOVE;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = 0;
+					break;
 
-// class Action {
-//   public:
-//      name;
-//      type;
-//      ard; // horisontal displacement agent
-//      acd; // vertical displacement agent
-//      brd; // horisontal displacement box
-//      bcd; //vertical displacement box
-//
-//     Action();
-//
-//     Action( Aname,  Atype,  Aard,  Aacd,  Abrd,  Abcd){
-//       name = Aname;
-//       type = Atype;
-//       ard = Aard;
-//       acd = Aacd;
-//       brd = Abrd;
-//       bcd = Abcd;
-//     };
-//
-//      NoOp() {
-//       name = "NoOp";
-//       type = NOOP;
-//       ard = 0;
-//       acd = 0;
-//       brd = 0;
-//       bcd = 0;
-//     }
+				case 3:
+					name = "Move(E)";
+					type = MOVE;
+					ard = 0;
+					acd = 1;
+					brd = 0;
+					bcd = 0;
+					break;
 
-    //  NoOp( "NoOp",  type = NOOP,  ard = 0,  acd = 0,  brd = 0,  bcd = 0);
-    //
-    //  MoveN( "Move(N)",  ActionType.MOVE,  -1, , 0, 0);
-    //  MoveS( "Move(S)",  ActionType.MOVE,  1, , 0, 0);
-    //  MoveE( "Move(E)",  ActionType.MOVE,  0,1, 0, 0);
-    //  MoveW( "Move(W)",  ActionType.MOVE,  0,-1, 0, 0);
-    //
-//      PushNN( "Push(N,N)",  ActionType.PUSH,  -1, , -1, 0);
-//      PushNE( "Push(N,E)",  ActionType.PUSH,  -1, , 0, 1);
-//      PushNW( "Push(N,W)",  ActionType.PUSH,  -1, , -0, -1);
-//      PushSS( "Push(S,S)",  ActionType.PUSH,  1, , 1, 0);
-//      PushSE( "Push(S,E)",  ActionType.PUSH,  1, , 0, 1);
-//      PushSW( "Push(S,W)",  ActionType.PUSH,  1, , 0, -1);
-//      PushEN( "Push(E,N)",  ActionType.PUSH,  0,1, -1, 0);
-//      PushES( "Push(E,S)",  ActionType.PUSH,  0,1, 1, 0);
-//      PushEE( "Push(E,E)",  ActionType.PUSH,  0,1, 0, 1);
-//      PushWN( "Push(W,N)",  ActionType.PUSH,  0,-1, -1, 0);
-//      PushWS( "Push(W,S)",  ActionType.PUSH,  0,-1, 1, 0);
-//      PushWW( "Push(W,W)",  ActionType.PUSH,  0,-1, 0, -1);
-//
-//      PullNN( "Pull(N,N)",  ActionType.PULL,  -1, , -1, 0);
-//      PullNE( "Pull(N,E)",  ActionType.PULL,  -1, , 0, 1);
-//      PullNW( "Pull(N,W)",  ActionType.PULL,  -1, , 0, -1);
-//      PullSS( "Pull(S,S)",  ActionType.PULL,  1, , 1, 0);
-//      PullSE( "Pull(S,E)",  ActionType.PULL,  1, , 0, 1);
-//      PullSW( "Pull(S,W)",  ActionType.PULL,  1, , 0, -1);
-//      PullEN( "Pull(E,N)",  ActionType.PULL,  0,1, -1, 0);
-//      PullES( "Pull(E,S)",  ActionType.PULL,  0,1, 1, 0);
-//      PullEE( "Pull(E,E)",  ActionType.PULL,  0,1, 0, 1);
-//      PullWE( "Pull(W,N)",  ActionType.PULL,  0,-1, -1, 0);
-//      PullWS( "Pull(W,S)",  ActionType.PULL,  0,-1, 1, 0);
-//      PullWW( "Pull(W,W)",  ActionType.PULL,  0,-1, 0,  Abcd =-1);
-// };
+				case 4:
+					name = "Move(W)";
+					type = MOVE;
+					ard = 0;
+					acd = -1;
+					brd = 0;
+					bcd = 0;
+					break;
+
+				case 5:
+					name = "Push(N,N)";
+					type = PUSH;
+					ard = -1;
+					acd = 0;
+					brd = -1;
+					bcd = 0;
+					break;
+
+				case 6:
+					name = "Push(N,E)";
+					type = PUSH;
+					ard = -1;
+					acd = 0;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 7:
+					name = "Push(N,W)";
+					type = PUSH;
+					ard = -1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 8:
+					name = "Push(S,S)";
+					type = PUSH;
+					ard = 1;
+					acd = 0;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 9:
+					name = "Push(S,E)";
+					type = PUSH;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 10:
+					name = "Push(S,W)";
+					type = PUSH;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 11:
+					name = "Push(E,N)";
+					type = PUSH;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 12:
+					name = "Push(E,S)";
+					type = PUSH;
+					ard = 0;
+					acd = 1;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 13:
+					name = "Push(E,E)";
+					type = PUSH;
+					ard = 0;
+					acd = 1;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 14:
+					name = "Push(W,N)";
+					type = PUSH;
+					ard = 0;
+					acd = -1;
+					brd = -1;
+					bcd = 0;
+					break;
+
+				case 15:
+					name = "Push(W,S)";
+					type = PUSH;
+					ard = 0;
+					acd = -1;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 16:
+					name = "Push(W,W)";
+					type = PUSH;
+					ard = 0;
+					acd = -1;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 17:
+					name = "Pull(N,N)";
+					type = PULL;
+					ard = -1;
+					acd = 0;
+					brd = -1;
+					bcd = 0;
+					break;
+
+				case 18:
+					name = "Pull(N,E)";
+					type = PULL;
+					ard = -1;
+					acd = 0;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 19:
+					name = "Pull(N,W)";
+					type = PULL;
+					ard = -1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 20:
+					name = "Pull(S,S)";
+					type = PULL;
+					ard = 1;
+					acd = 0;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 21:
+					name = "Pull(S,E)";
+					type = PULL;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 22:
+					name = "Pull(S,W)";
+					type = PULL;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 23:
+					name = "Pull(E,N)";
+					type = PULL;
+					ard = 1;
+					acd = 0;
+					brd = 0;
+					bcd = -1;
+					break;
+
+				case 24:
+					name = "Pull(E,S)";
+					type = PULL;
+					ard = 0;
+					acd = 1;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 25:
+					name = "Pull(E,E)";
+					type = PULL;
+					ard = 0;
+					acd = 1;
+					brd = 0;
+					bcd = 1;
+					break;
+
+				case 26:
+					name = "Pull(W,N)";
+					type = PULL;
+					ard = 0;
+					acd = -1;
+					brd = -1;
+					bcd = 0;
+					break;
+
+				case 27:
+					name = "Pull(W,S)";
+					type = PULL;
+					ard = 0;
+					acd = -1;
+					brd = 1;
+					bcd = 0;
+					break;
+
+				case 28:
+					name = "Pull(W,W)";
+					type = PULL;
+					ard = 0;
+					acd = -1;
+					brd = 0;
+					bcd = -1;
+					break;
+			}
+		}
+};

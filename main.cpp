@@ -109,6 +109,6 @@ int main () {
 	// State.walls = walls;
 	// State.boxes = boxes;
 	// State.goals = goals;
-	// return State state(agent_rows, agent_cols, boxes);
+	// return State state(walls, goals, box_colors, boxes, agent_colors, agent_rows, agent_cols);
 
 }

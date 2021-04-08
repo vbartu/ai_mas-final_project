@@ -179,8 +179,8 @@ vector<State> State::get_expanded_states() {
     // Determine list of applicable action for each individual agent
     vector<vector<Action>> applicable_actions;
     for (int agent = 0; agent < num_agents; agent++) {
-      for (int act = 0; act < lenActionList; act++) {
-        Action action(act);
+      for (int act = 0; act < ACTION_LIST_SIZE; act++) {
+        Action action = action_list[act];
         if (is_applicable(agent, action)) {
           applicable_actions[agent].push_back(action);
         }

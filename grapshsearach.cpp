@@ -1,16 +1,63 @@
 #include <cstdio>
-#include "action.h"
-#include "state.h"
-#include "frontier.h"
+#include <chrono>
+// #include "action.h"
+// #include "state.h"
+// #include "frontier.h"
 
 using namespace std;
+
+auto start_time = chrono::system_clock::now();
 
 class GraphSearch {
   public:
 
+    void print_search_status(vector<State> explored, Frontier frontier, State state, bool same_line = false) {
+      auto end = chrono::system_clock::now();
+      float elapsed_time = start - end;
+
+      if isinstance(frontier, FrontierBestFirst) {
+        cout << "E: " << explored.size();
+        cout << "G: " << explored.size() + frontier.size();
+        cout << "T: " << elapsed_time << "s";
+        // cout << "M: " << memory.get_usage;
+        cout << "D: " << state.Mg;
+        cout << "H: " << frontier.last_f;
+        if (same_line) {
+          char end = '\r';
+        }
+        else {
+          char end = '\n';
+        }
+        // file = sys.stderr;
+        // flush=true;
+      }
+
+      else {
+        cout << "E: " << explored.size();
+        cout << "G: " << explored.size() + frontier.size();
+        out << "T: " << elapsed_time << "s";
+        // cout << "M: " << memory.get_usage;
+        cout << "D: " << state.Mg;
+        if (same_line) {
+          char end = '\r';
+        }
+        else {
+          char end = '\n';
+        }
+        // file = sys.stderr;
+        // flush=true;
+      }
+
+
+    void print_bar() {
+      cout << "=================================================" << endl;
+          // file=sys.stderr,
+          // flush=True
+    }
+
+
     vector<vector<Action>> search(State initial_state, Frontier frontier) {
         bool output_fixed_solution = false;
-
         if (output_fixed_solution) {
           return Action[] = {MoveS, MoveN, MoveN};
         }
@@ -73,4 +120,8 @@ class GraphSearch {
                 frontier.add(node);
               }
             }
-}
+          }
+        }
+      }
+    }
+  }

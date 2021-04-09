@@ -34,10 +34,8 @@ int main () {
 			char obj = line[i];
 			if (obj >= '0' and obj <= '9') {
 				agent_colors[obj - '0'] = get_color_value(color);
-				ag_count +=1;
 			} else {
 				box_colors[obj - 'A'] = get_color_value(color);
-				box_count += 1;
 			}
 		}
 		getline(cin, line);

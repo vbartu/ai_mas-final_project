@@ -52,7 +52,7 @@ Action action_list[] = {NoOp, MoveN, MoveS, MoveE, MoveW, PushNN, PushNE,
 	PushWW, PullNN, PullNE, PullNW, PullSS, PullSE, PullSW, PullEN, PullES,
 	PullEE, PullWN, PullWS, PullWW};
 
-// int main()
-// {
-// 	return 0;
-// }
+int main()
+{
+	return 0;
+}

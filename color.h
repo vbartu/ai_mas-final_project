@@ -1,3 +1,6 @@
+#ifndef __COLOR_H
+#define __COLOR_H
+
 #include <string>
 #include <cstdio>
 using namespace std;
@@ -16,3 +19,5 @@ enum color {
 };
 
 int get_color_value(string color);
+
+#endif

@@ -1,8 +1,12 @@
+#ifndef __FRONTIER_H
+#define __FRONTIER_H
+
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "state.h"
 #include <deque>
+#include "state.h"
+// #include "action
 
 using namespace std;
 
@@ -21,18 +25,36 @@ class FrontierBFS: public Frontier {
   public:
     deque<State> queue;
     vector<State> set;
+
+    void add(State state);
+    State pop();
+    bool is_empty();
+    int size();
+    bool contains(State state);
+    string getName();
 };
+
 
 class FrontierDFS: public Frontier {
   public:
     deque<State> queue;
     vector<State> set;
+
+    void add(State state);
+    State pop();
+    bool is_empty();
+    int size();
+    bool contains(State state);
+    string getName();
 };
 
-class FrontierBestFirt(Frontier) {
-  public:
-    // heuristic heur;
-    vector<State> queue;
-    vector<State> set;
-    int last_f = -1;
-};
+
+// class FrontierBestFirt(Frontier) {
+//   public:
+//     // heuristic heur;
+//     vector<State> queue;
+//     vector<State> set;
+//     int last_f = -1;
+// };
+
+#endif

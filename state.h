@@ -1,7 +1,9 @@
+#ifndef __STATE_H
+#define __STATE_H
+
 #include <vector>
 #include <string>
-
-// #include "action.h"
+#include "action.h"
 
 using namespace std;
 
@@ -54,3 +56,5 @@ class State {
 
     string repr();
 };
+
+#endif

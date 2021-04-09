@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 #include "state.h"
 #include "action.h"
 #include "frontier.h"
@@ -17,8 +18,20 @@ class PriorityQueueNode {
       this->state = state;
     }
 
-    int __lt__( PriorityQueueNode other):
-        return this->priority < other.priority
+    int __lt__( PriorityQueueNode other){
+        return this->priority < other.priority;
+      }
+};
+
+/* Frontier */
+
+// void Frontier::add(State state) {};
+// State pop() {return null;}
+// bool is_empty() { return false;}
+// int size();
+// bool contains(State state) ;
+// string getName() ;
+
 
 /* FrontierBFS */
 
@@ -27,26 +40,30 @@ void FrontierBFS::add(State state) {
   bool found = false;
   for(int i = 0; i< set.size(); i++){
     if (this->set[i] == state) {
-      found = true
+      found = true;
       break;
     }
   if(!found) {
     this->set.push_back(state);
   }
   // this->set.insert(state);
+  }
 }
 
-State FrontierBFS::pop() {
-  state = this->queue.pop_front();
 
+State FrontierBFS::pop() {
+  State state = this->queue[0];
+  this->queue.pop_front();
   for(int i = 0; i< set.size(); i++){
     if (set[i] == state) {
-      set.erase(set-begin() + i);
+      set.erase(set.begin() + i);
       break;
     }
   // this->set.erase(state);
+  }
   return state;
 }
+
 
 bool FrontierBFS::is_empty() {
   return this->queue.empty();
@@ -67,7 +84,7 @@ bool FrontierBFS::contains(State state) {
 }
 
 string FrontierBFS::getName() {
-  return "breadth-first search"
+  return "breadth-first search";
 }
 
 
@@ -78,35 +95,41 @@ void FrontierDFS::add(State state) {
   bool found = false;
   for(int i = 0; i< set.size(); i++){
     if (this->set[i] == state) {
-      found = true
+      found = true;
       break;
     }
   if(!found) {
     this->set.push_back(state);
   }
   // this->set.insert(state);
+  }
 }
 
 State FrontierDFS::pop() {
-  state = this->queue.pop_back();
+  State state = this->queue.back();
+  this->queue.pop_back();
   for(int i = 0; i < set.size(); i++){
     if (set[i] == state) {
-      set.erase(set-begin() + i);
+      set.erase(set.begin() + i);
       break;
     }
   // this->set.erase(state);
+  }
   return state;
 }
 
-bool FrontierBFS::is_empty() {
+
+bool FrontierDFS::is_empty() {
   return this->queue.empty();
 }
 
-int FrontierBFS::size() {
+
+int FrontierDFS::size() {
   return this->queue.size();
 }
 
-bool FrontierBFS::contains(State state) {
+
+bool FrontierDFS::contains(State state) {
   for(int i = 0; i< set.size(); i++){
     if (set[i] == state) {
       return true;
@@ -116,55 +139,67 @@ bool FrontierBFS::contains(State state) {
   // return this->set.find(element) != this->set.end();
 }
 
-string FrontierBFS::getName() {
-  return "depth-first search"
+
+string FrontierDFS::getName() {
+  return "depth-first search";
 }
 
 
 /* FrontierBestFirst */
-void FrontierDFS::add(State state) {
-  this->queue.push_front(state);
-  bool found = false;
-  for(int i = 0; i< set.size(); i++){
-    if (this->set[i] == state) {
-      found = true
-      break;
-    }
-  if(!found) {
-    this->set.push_back(state);
-  }
-  // this->set.insert(state);
-}
+// void FrontierBestFirst::add(State state) {
+//   this->queue.push_front(state);
+//   bool found = false;
+//   for(int i = 0; i< set.size(); i++){
+//     if (this->set[i] == state) {
+//       found = true
+//       break;
+//     }
+//   if(!found) {
+//     this->set.push_back(state);
+//   }
+//   // this->set.insert(state);
+// }
 
-State FrontierDFS::pop() {
-  state = this->queue.pop_back();
-  for(int i = 0; i < set.size(); i++){
-    if (set[i] == state) {
-      set.erase(set-begin() + i);
-      break;
-    }
-  // this->set.erase(state);
-  return state;
-}
 
-bool FrontierBFS::is_empty() {
-  return this->queue.empty();
-}
+// State FrontierBestFirst::pop() {
+//   State state = this->queue.pop_back();
+//   for(int i = 0; i < set.size(); i++){
+//     if (set[i] == state) {
+//       set.erase(setbegin() + i);
+//       break;
+//     }
+//   // this->set.erase(state);
+//   return state;
+// }
+//
+//
+// bool FrontierBestFirst::is_empty() {
+//   return this->queue.empty();
+// }
+//
+//
+// int FrontierBestFirst::size() {
+//   return this->queue.size();
+// }
+//
+//
+// bool FrontierBestFirst::contains(State state) {
+//   for(int i = 0; i< set.size(); i++){
+//     if (set[i] == state) {
+//       return true;
+//     }
+//   }
+//   return false;
+//   // return this->set.find(element) != this->set.end();
+// }
+//
+//
+// string FrontierBestFirst::getName() {
+//   return "depth-first search";
+// }
 
-int FrontierBFS::size() {
-  return this->queue.size();
-}
 
-bool FrontierBFS::contains(State state) {
-  for(int i = 0; i< set.size(); i++){
-    if (set[i] == state) {
-      return true;
-    }
-  }
-  return false;
-  // return this->set.find(element) != this->set.end();
-}
-
-string FrontierBFS::getName() {
-  return "depth-first search"
+int main() {
+  cout << "ok";
+  return 0;
 }

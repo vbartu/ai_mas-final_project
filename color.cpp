@@ -1,7 +1,4 @@
-#include <string>
 #include "color.h"
-
-using namespace std;
 
 int get_color_value(string color)
 {

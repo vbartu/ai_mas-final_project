@@ -1,101 +1,65 @@
 #include <iostream>
 #include <cstdio>
-#include <string>
-#include <vector>
+// #include <string>
+// #include <vector>
 #include <random>
 #include <typeinfo>
 
 #include "action.h"
 #include "color.h"
+#include "state.h"
 
 using namespace std;
 
-class State {
-  // private:
-    // const  int RNG = rand()%1;
+// Constructor
+State::State(){};
 
-  public:
-    vector<char> Magent_rows;
-    vector<char> Magent_cols;
-    vector<vector<char>> Mboxes;
-    static vector<vector<char>> Mwalls;
-    static vector<vector<char>> Mgoals;
-    static vector<int> Magent_colors;
-    static vector<int> Mbox_colors;
-    vector<Action> Mjoint_action;
-
-    // final State Mparent;
-    int Mg; // depth
-    int Mhash = 0;
-
-    // Constructor
-    State(){};
-
-    State(vector<vector<char>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
-          vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<char> &Aagent_rows,
-          vector<char> &Aagent_cols)
-    {
-        Mwalls = Awalls;
-        Mgoals = Agoals;
-        Mbox_colors = Abox_colors;
-        Mboxes = Aboxes;
-        Magent_colors = Aagent_colors;
-        Magent_rows = Aagent_rows;
-        Magent_cols = Aagent_cols;
-
-    };
+State::State(vector<vector<char>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
+             vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<char> &Aagent_rows,
+             vector<char> &Aagent_cols) {
+    Mwalls = Awalls;
+    Mgoals = Agoals;
+    Mbox_colors = Abox_colors;
+    Mboxes = Aboxes;
+    Magent_colors = Aagent_colors;
+    Magent_rows = Aagent_rows;
+    Magent_cols = Aagent_cols;
+  };
 
 
-    State(vector<char> &Aagent_rows, vector<char> &Aagent_cols, vector<vector<char>> &Aboxes) {
-        Magent_rows = Aagent_rows;
-        Magent_cols = Aagent_cols;
-        Mboxes = Aboxes;
-    };
+State::State(vector<char> &Aagent_rows, vector<char> &Aagent_cols, vector<vector<char>> &Aboxes) {
+    Magent_rows = Aagent_rows;
+    Magent_cols = Aagent_cols;
+    Mboxes = Aboxes;
+};
 
 
     // Copy Constructor
-    State(const State &state) {
-      Magent_rows = state.Magent_rows;
-      Magent_cols = state.Magent_cols;
-      Mboxes = state.Mboxes;
-      Mwalls = state.Mwalls;
-      Magent_colors = state.Magent_colors;
-      Mbox_colors = state.Mbox_colors;
-      Mjoint_action = state.Mjoint_action;
-      Mg = state.Mg;
-      Mhash = state.Mhash;
-      // Mparent(this->Mparent);
-    };
+State::State(const State &state) {
+    Magent_rows = state.Magent_rows;
+    Magent_cols = state.Magent_cols;
+    Mboxes = state.Mboxes;
+    Mwalls = state.Mwalls;
+    Magent_colors = state.Magent_colors;
+    Mbox_colors = state.Mbox_colors;
+    Mjoint_action = state.Mjoint_action;
+    Mg = state.Mg;
+    Mhash = state.Mhash;
+    // Mparent(this->Mparent);
+};
 
     // To check if two state are equals
-    bool operator==(const State &other) {
-      return this->Magent_rows == other.Magent_rows
-             && this->Magent_cols == other.Magent_cols
-             && this->Mboxes == other.Mboxes
-             && this->Mwalls == other.Mwalls
-             && this->Magent_colors == other.Magent_colors
-             && this->Mbox_colors == other.Mbox_colors
-             && this->Mjoint_action == other.Mjoint_action
-             && this->Mg == other.Mg
-             && this->Mhash == other.Mhash;
-             // && this->Mparent == other.Mparent;
-   }
-
-
-    // All the functions
-    State apply_action(vector<Action> joint_action);
-    bool is_goal_state();
-    vector<State> get_expanded_states();
-    bool is_applicable(int agent, Action action);
-    bool is_free(int row, int col);
-    char agent_at(int row, int col);
-    vector<vector<Action>> extract_plan();
-    int hashCode();
-    bool equals(State other);
-    string repr();
-
-
-
+bool State::operator==(const State &other) {
+  return this->Magent_rows == other.Magent_rows
+         && this->Magent_cols == other.Magent_cols
+         && this->Mboxes == other.Mboxes
+         && this->Mwalls == other.Mwalls
+         && this->Magent_colors == other.Magent_colors
+         && this->Mbox_colors == other.Mbox_colors
+         && this->Mjoint_action == other.Mjoint_action
+         && this->Mg == other.Mg
+         && this->Mhash == other.Mhash;
+         // && this->Mparent == other.Mparent;
 };
 
 State State::apply_action(vector<Action> joint_action) {
@@ -154,7 +118,7 @@ State State::apply_action(vector<Action> joint_action) {
     copy_state.Mjoint_action = joint_action;
     copy_state.Mg = this->Mg + 1;
     return copy_state;
-}
+};
 
 
 bool State::is_goal_state() {
@@ -171,7 +135,7 @@ bool State::is_goal_state() {
       }
     }
     return true;
-}
+};
 
 
 vector<State> State::get_expanded_states() {
@@ -217,7 +181,7 @@ vector<State> State::get_expanded_states() {
     }
     // this->RNG.shuffle(expanded_states);
     return expanded_states;
-}
+};
 
 
 bool State::is_applicable(int agent, Action action) {
@@ -276,7 +240,8 @@ bool State::is_applicable(int agent, Action action) {
       int agent_dst_col = agent_col + action.acd;
       return is_free(agent_dst_row, agent_dst_col);
     }
-}
+    return false;
+};
 
 
 bool State::is_free(int row, int col) {
@@ -288,10 +253,10 @@ char State::agent_at(int row, int col) {
     for (int agent = 0; agent < this->Magent_rows.size(); agent++) {
       if (this->Magent_rows[agent] == row && this->Magent_cols[agent] == col) {
         return char(agent + int('0'));
-    return false;
       }
     }
-}
+    return false;
+};
 
 
 vector<vector<Action>> State::extract_plan() {
@@ -305,7 +270,7 @@ vector<vector<Action>> State::extract_plan() {
       // state = state.Mparent;
     }
     return plan;
-}
+};
 
 
 // int State::hashCode() {
@@ -329,10 +294,10 @@ vector<vector<Action>> State::extract_plan() {
 //       this->Mhash = result;
 //     }
 //     return this->Mhash;
-// }
+// };
 
 
-bool State::equals(State other) {
+bool State::equals(State other)  {
     State state = *this; // maybe there is a better way to pass *this directly
     if (state == other) {
       return true;
@@ -362,7 +327,7 @@ bool State::equals(State other) {
       return false;
     }
     return true;
-}
+};
 
 
 string State::repr() {
@@ -390,7 +355,7 @@ string State::repr() {
       lines.append("\n");
     }
     return lines;
-}
+};
 
 //
 int main() {

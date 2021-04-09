@@ -1,9 +1,6 @@
 #include "action.h"
-#include <iostream>
-
 
 using namespace std;
-
 
 Action::Action(string name, int type, int ard, int acd, int brd, int bcd)
 {
@@ -19,8 +16,6 @@ bool Action::operator==(const Action &action) const
 {
 	return this->name == action.name;
 }
-
-
 
 const Action NoOp = Action("NoOp", NOOP, 0, 0, 0, 0);
 const Action MoveN = Action("Move(N)", MOVE, -1, 0, 0, 0);
@@ -57,6 +52,7 @@ Action action_list[] = {NoOp, MoveN, MoveS, MoveE, MoveW, PushNN, PushNE,
 	PushWW, PullNN, PullNE, PullNW, PullSS, PullSE, PullSW, PullEN, PullES,
 	PullEE, PullWN, PullWS, PullWW};
 
-int main () {
-	bool test = NoOp == MoveN;
-}
+// int main()
+// {
+// 	return 0;
+// }

@@ -1,69 +1,41 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <fstream>
+#include <vector>
+
+#include "color.h"
+#include "graphsearch.h"
+#include "state.h"
 
 using namespace std;
 
 #define CLIENT_NAME "Final project client"
 
-enum color_values {
-	BLUE=1,
-	RED,
-	CYAN,
-	PURPLE,
-	GREEN,
-	ORANGE,
-	PINK, 
-	GREY,
-	LIGHTBLUE,
-	BROWN
-};
-
-
-int get_color_value(string color);
-
-int get_color_value(string color)
+int main (int argc, char *argv[])
 {
-	if (color.compare("blue") == 0) {
-		return BLUE;
-	} else if (color.compare("red") == 0) {
-		return RED;
-	} else if (color.compare("cyan") == 0) {
-		return CYAN;
-	} else if (color.compare("purple") == 0) {
-		return PURPLE;
-	} else if (color.compare("green") == 0) {
-		return GREEN;
-	} else if (color.compare("orange") == 0) {
-		return ORANGE;
-	} else if (color.compare("pink") == 0) {
-		return PINK;
-	} else if (color.compare("grey") == 0) {
-		return GREY;
-	} else if (color.compare("lightblue") == 0) {
-		return LIGHTBLUE;
-	} else if (color.compare("brown") == 0) {
-		return BROWN;
-	}
-	return -1;
-}
-		
-
-int main () {
 	cout << CLIENT_NAME << endl;
 	cout << "#" << "Starting" << endl;
 
+	// Creation of ifstream class object to read the file
+	ifstream fin;
+
+	// by default open mode = ios::in mode
+	fin.open(argv[1]);
+
 	string line;
-	getline(cin, line); // #domain
-	getline(cin, line); // hospital
-	getline(cin, line); // #levelname
-	getline(cin, line); // level name
+
+	// Read a Line from File
+	getline(fin, line); // #domain
+	getline(fin, line); // hospital
+	getline(fin, line); // #levelname
+	getline(fin, line); // level name
 
 	// Parse colors
-	getline(cin, line); // #colors
+	getline(fin, line); // #colors
 	int agent_colors[10] = {};
 	int box_colors[26] = {};
-	getline(cin, line);
+	getline(fin, line);
 	while (line[0] != '#') {
 		int color_end = line.find(":");
 		string color = line.substr(0, color_end);
@@ -77,7 +49,7 @@ int main () {
 			}
 		}
 
-		getline(cin, line);
+		getline(fin, line);
 	}
 
 	// Parse level size
@@ -85,14 +57,13 @@ int main () {
 	int n_rows = 0;
 	int n_cols = 0;
 
-	getline(cin, line);
+	getline(fin, line);
 	while (line[0] != '#') {
 		initial_state_lines[n_rows++] = line;
 		if (line.length() > n_cols)
 			n_cols = line.length();
-		getline(cin, line);
+		getline(fin, line);
 	}
-
 
 	// Parse initial state
 	bool walls[n_rows][n_cols] = {};
@@ -115,11 +86,10 @@ int main () {
 		}
 	}
 
-
 	// Parse goal state
 	char goals[n_rows][n_cols] = {};
 
-	getline(cin, line);
+	getline(fin, line);
 	for (int i = 0; line[0] != '#'; i++) {
 		for (int j = 0; j < line.length(); j++) {
 			char c = line[j];
@@ -129,6 +99,17 @@ int main () {
 				goals[i][j] = c;
 			}
 		}
-		getline(cin, line);
+		getline(fin, line);
 	}
+
+	// Close the file
+    fin.close();
+
+	vector<Action> initial_state;
+	vector<vector<Action>> frontier;
+	search(initial_state,frontier);
+
+	cout<< "Finish" << endl;
+
+	return 0;
 }

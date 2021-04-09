@@ -1,8 +1,9 @@
 #include <cstdio>
 #include <chrono>
+#include <vector>
 // #include "action.h"
-// #include "state.h"
-// #include "frontier.h"
+#include "state.h"
+#include "frontier.h"
 
 using namespace std;
 
@@ -125,8 +126,5 @@ class GraphSearch {
       }
     }
   }
-<<<<<<< HEAD
 
 }
-=======
->>>>>>> 0cdff6e8564b18037e71667c9bd25b324700129b

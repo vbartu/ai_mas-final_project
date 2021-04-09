@@ -22,3 +22,17 @@ class FrontierBFS: public Frontier {
     deque<State> queue;
     vector<State> set;
 };
+
+class FrontierDFS: public Frontier {
+  public:
+    deque<State> queue;
+    vector<State> set;
+};
+
+class FrontierBestFirt(Frontier) {
+  public:
+    // heuristic heur;
+    vector<State> queue;
+    vector<State> set;
+    int last_f = -1;
+};

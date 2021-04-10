@@ -2,7 +2,11 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+
 #include "color.h"
+#include "graphsearch.h"
+#include "frontier.h"
+#include "state.h"
 
 using namespace std;
 
@@ -21,8 +25,8 @@ int main () {
 
 	// Parse colors
 
-	vector<int> agent_colors;
-	vector<int> box_colors;
+	vector<int> agent_colors(10);
+	vector<int> box_colors(26);
 
 	getline(cin, line); // #colors
 	getline(cin, line);
@@ -45,12 +49,13 @@ int main () {
 
 	// Parse level size
 	string initial_state_lines[100] = {};
-	int n_rows;
-	int n_cols;
+	int n_rows = 0;
+	int n_cols = 0;
 
 	getline(cin, line);
 	while (line[0] != '#') {
 		initial_state_lines[n_rows++] = line;
+		
 		if (line.length() > n_cols)
 			n_cols = line.length();
 		getline(cin, line);
@@ -63,13 +68,22 @@ int main () {
 	vector<vector<char>> goals(n_rows);
 
 	for (int i= 0; i < n_rows; i++) {
-		walls.push_back(vector<bool>(n_cols,false));
-		boxes.push_back(vector<char>(n_cols, ' '));
-		goals.push_back(vector<char>(n_cols,' '));
+		vector<bool> n_wall(n_cols);
+		walls.push_back(n_wall);
+		vector<char> n_box(n_cols);
+		boxes.push_back(n_box);
+		vector<char> n_goal(n_cols);
+		goals.push_back(n_goal);
+		for (int j = 0; j < n_cols; j++) {
+			walls[i].push_back(false);
+			boxes[i].push_back(false);
+			goals[i].push_back(false);
+		}
 	}
 
 	vector<int> agent_rows;
 	vector<int> agent_cols;
+
 
 	for (int i= 0; i < n_rows; i++) {
 		line = initial_state_lines[i];
@@ -78,7 +92,9 @@ int main () {
 			if (c == ' ') {
 				continue;
 			} else if (c == '+') {
+
 				walls[i][j] = true;
+
 			} else if ('0' <= c && c <= '9') {
 				agent_rows.push_back(i);
 				agent_cols.push_back(j);
@@ -87,6 +103,7 @@ int main () {
 			}
 		}
 	}
+
 
 
 	getline(cin, line);
@@ -102,11 +119,28 @@ int main () {
 		getline(cin, line);
 	}
 
+	
+	State::Magent_colors = agent_colors;
+	State::Mwalls = walls;
+	State::Mgoals = goals;
+	State initial_state(walls, goals, box_colors, boxes, agent_colors, agent_rows, agent_cols);
+
+	FrontierBFS frontier;
+
+	vector<vector<Action>> result = search(initial_state, frontier);
+
+	cout << "#" << "Result: " << result.size() << endl;
+
+	for(int i = 0; i < result.size(); i++) {
+		string join_action = "";
+		for (int j = 0; j < result[i].size(); j++) {
+			join_action += result[i][j].name;
+			if (j != result[i].size()) {
+				join_action += ";";
+			}
+		}
+		cout << join_action << endl;
+	}
 	return 0;
-	// State.Magent_color = agent_colors;
-	// State.walls = walls;
-	// State.boxes = boxes;
-	// State.goals = goals;
-	// return State state(walls, goals, box_colors, boxes, agent_colors, agent_rows, agent_cols);
 
 }

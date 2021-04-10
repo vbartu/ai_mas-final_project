@@ -2,15 +2,14 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
+
 #include "state.h"
 #include "frontier.h"
+#include "graphsearch.h"
 
 using namespace std;
 
 auto start_time = chrono::system_clock::now();
-
-class GraphSearch {
-  public:
 
     void print_search_status(vector<State> explored, Frontier &frontier, State state, bool same_line = false) {
       auto end = chrono::system_clock::now();
@@ -129,4 +128,3 @@ class GraphSearch {
         }
       }
     }
-};

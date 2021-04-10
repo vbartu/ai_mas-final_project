@@ -11,13 +11,13 @@ class State {
   // private:
     // const  int RNG = rand()%1;
   public:
-    vector<char> Magent_rows;
-    vector<char> Magent_cols;
+    vector<int> Magent_rows;
+    vector<int> Magent_cols;
     vector<vector<char>> Mboxes;
-    vector<vector<char>> Mwalls;
-    vector<vector<char>> Mgoals;
-    vector<int> Magent_colors;
-    vector<int> Mbox_colors;
+    static vector<vector<bool>> Mwalls;
+    static vector<vector<char>> Mgoals;
+    static vector<int> Magent_colors;
+    static vector<int> Mbox_colors;
     vector<Action> Mjoint_action;
     // final State Mparent;
     int Mg; // depth
@@ -26,11 +26,11 @@ class State {
     // Constructor
     State();
 
-    State(vector<vector<char>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
-          vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<char> &Aagent_rows,
-          vector<char> &Aagent_cols);
+    State(vector<vector<bool>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
+          vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<int> &Aagent_rows,
+          vector<int> &Aagent_cols);
 
-    State(vector<char> &Aagent_rows, vector<char> &Aagent_cols, vector<vector<char>> &Aboxes);
+    State(vector<int> &Aagent_rows, vector<int> &Aagent_cols, vector<vector<char>> &Aboxes);
 
     State(const State &state);
 

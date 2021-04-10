@@ -9,12 +9,17 @@
 
 using namespace std;
 
+vector<vector<bool>> State::Mwalls;
+vector<vector<char>> State::Mgoals;
+vector<int> State::Magent_colors;
+vector<int> State::Mbox_colors;
+
 // Constructor
 State::State(){};
 
-State::State(vector<vector<char>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
-             vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<char> &Aagent_rows,
-             vector<char> &Aagent_cols) {
+State::State(vector<vector<bool>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
+             vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<int> &Aagent_rows,
+             vector<int> &Aagent_cols) {
     Mwalls = Awalls;
     Mgoals = Agoals;
     Mbox_colors = Abox_colors;
@@ -25,7 +30,7 @@ State::State(vector<vector<char>> &Awalls, vector<vector<char>> &Agoals, vector<
   };
 
 
-State::State(vector<char> &Aagent_rows, vector<char> &Aagent_cols, vector<vector<char>> &Aboxes) {
+State::State(vector<int> &Aagent_rows, vector<int> &Aagent_cols, vector<vector<char>> &Aboxes) {
     Magent_rows = Aagent_rows;
     Magent_cols = Aagent_cols;
     Mboxes = Aboxes;
@@ -82,8 +87,8 @@ State State::apply_action(vector<Action> joint_action) {
     */
 
     // Copy this state-
-    vector<char> copy_agents_rows(this->Magent_rows);
-    vector<char> copy_agents_cols(this->Magent_cols);
+    vector<int> copy_agents_rows(this->Magent_rows);
+    vector<int> copy_agents_cols(this->Magent_cols);
     vector<vector<char>> copy_boxes(this->Mboxes);
 
     // Appy each action.

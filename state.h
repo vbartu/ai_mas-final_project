@@ -14,10 +14,10 @@ class State {
     vector<char> Magent_rows;
     vector<char> Magent_cols;
     vector<vector<char>> Mboxes;
-    static vector<vector<char>> Mwalls;
-    static vector<vector<char>> Mgoals;
-    static vector<int> Magent_colors;
-    static vector<int> Mbox_colors;
+    vector<vector<char>> Mwalls;
+    vector<vector<char>> Mgoals;
+    vector<int> Magent_colors;
+    vector<int> Mbox_colors;
     vector<Action> Mjoint_action;
     // final State Mparent;
     int Mg; // depth

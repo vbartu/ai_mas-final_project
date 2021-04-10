@@ -290,12 +290,12 @@ int State::hashCode() {
     if (this->Mhash == 0) {
       int prime = 31;
       int result = 1;
-      result = prime * result + hashCode(this->Mbox_colors);
-      result = prime * result + hashCode(this->Magent_colors);
-      result = prime * result + hashCode(this->Mwalls);
-      result = prime * result + hashCode(this->Mgoals);
-      result = prime * result + hashCode(this->Magent_rows);
-      result = prime * result + hashCode(this->Magent_cols);
+      //result = prime * result + hashCode(this->Mbox_colors);
+      //result = prime * result + hashCode(this->Magent_colors);
+      //result = prime * result + hashCode(this->Mwalls);
+      //result = prime * result + hashCode(this->Mgoals);
+      //result = prime * result + hashCode(this->Magent_rows);
+      //result = prime * result + hashCode(this->Magent_cols);
       for (int row = 0; row < this->Mboxes.size(); ++row) {
         for (int col = 0; col < this->Mboxes[row].size(); ++col) {
           char c = this->Mboxes[row][col];
@@ -377,15 +377,3 @@ string State::repr()
     }
     return lines;
 };
-
-//
-int main() {
-
-  // vector<vector<char>> boxes{ { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9, 4 } };
-  // vector<char> rows{ {4, 5, 6} };
-  // vector<char> cols{ {1, 2, 3} };
-  //
-  // State state1(rows, cols, boxes);
-
-  return 0;
-}

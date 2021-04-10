@@ -197,9 +197,3 @@ string FrontierDFS::getName() {
 // string FrontierBestFirst::getName() {
 //   return "depth-first search";
 // }
-
-
-int main() {
-  cout << "ok";
-  return 0;
-}

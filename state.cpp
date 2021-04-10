@@ -60,6 +60,21 @@ bool State::operator==(const State &other) {
          // && this->Mparent == other.Mparent;
 };
 
+/*
+bool operator==(State state1, State state2) {
+  return state1.Magent_rows == state2.Magent_rows
+         && state1.Magent_cols == state2.Magent_cols
+         && state1.Mboxes == state2.Mboxes
+         && state1.Mwalls == state2.Mwalls
+         && state1.Magent_colors == state2.Magent_colors
+         && state1.Mbox_colors == state2.Mbox_colors
+         && state1.Mjoint_action == state2.Mjoint_action
+         && state1.Mg == state2.Mg
+         && Mhash == state2.Mhash;
+         // && state1.Mparent == state2.Mparent;
+}
+*/
+
 State State::apply_action(vector<Action> joint_action) {
     /*
     Returns the state resulting from applying joint_action in this state.
@@ -271,28 +286,28 @@ vector<vector<Action>> State::extract_plan() {
 };
 
 
-// int State::hashCode() {
-//     if (this->Mhash == 0) {
-//       int prime = 31;
-//       int result = 1;
-//       result = prime * result + hashCode(this->Mbox_colors);
-//       result = prime * result + hashCode(this->Magent_colors);
-//       result = prime * result + hashCode(this->Mwalls);
-//       result = prime * result + hashCode(this->Mgoals);
-//       result = prime * result + hashCode(this->Magent_rows);
-//       result = prime * result + hashCode(this->Magent_cols);
-//       for (int row = 0; row < this->Mboxes.size(); ++row) {
-//         for (int col = 0; col < this->Mboxes[row].size(); ++col) {
-//           char c = this->Mboxes[row][col];
-//           if (c!=0) {
-//             result = prime * result + (row * this->Mboxes[row].size() + col) * ;c
-//           }
-//         }
-//       }
-//       this->Mhash = result;
-//     }
-//     return this->Mhash;
-// };
+int State::hashCode() {
+    if (this->Mhash == 0) {
+      int prime = 31;
+      int result = 1;
+      result = prime * result + hashCode(this->Mbox_colors);
+      result = prime * result + hashCode(this->Magent_colors);
+      result = prime * result + hashCode(this->Mwalls);
+      result = prime * result + hashCode(this->Mgoals);
+      result = prime * result + hashCode(this->Magent_rows);
+      result = prime * result + hashCode(this->Magent_cols);
+      for (int row = 0; row < this->Mboxes.size(); ++row) {
+        for (int col = 0; col < this->Mboxes[row].size(); ++col) {
+          char c = this->Mboxes[row][col];
+          if (c!=0) {
+            result = prime * result + (row * this->Mboxes[row].size() + col) * c;
+          }
+        }
+      }
+      this->Mhash = result;
+    }
+    return this->Mhash;
+};
 
 
 bool State::equals(State other)  {
@@ -328,25 +343,33 @@ bool State::equals(State other)  {
 };
 
 
-string State::repr() {
+string State::repr()
+{
     string lines;
-    for (int row = 0; row < this->Mboxes.size(); row++) {
+    for (int row = 0; row < this->Mboxes.size(); row++)
+    {
       string line;
-      for (int col = 0; col < this->Mboxes[row].size(); col++) {
-        if (this->Mboxes[row][col] != ' ') {
+      for (int col = 0; col < this->Mboxes[row].size(); col++)
+      {
+        if (this->Mboxes[row][col] != ' ')
+        {
           line.append(to_string(this->Mboxes[row][col]));
         }
-        else if (this->Mwalls[row][col] != false) {
+        else if (this->Mwalls[row][col] != false)
+        {
           line.append("+");
         }
-        else if (agent_at(row,col) != false) {
+        else if (agent_at(row,col) != false)
+        {
           line.append(to_string(agent_at(row,col)));
         }
-        else {
+        else
+        {
           line.append(" ");
         }
       }
-      for (int i = 1; i < line.length(); i += 3) {
+      for (int i = 1; i < line.length(); i += 3)
+      {
         line.append(i, ' ');
       }
       lines.append(line);

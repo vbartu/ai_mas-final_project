@@ -50,7 +50,7 @@ class State {
 
     vector<vector<Action>> extract_plan();
 
-    // int hashCode();
+    int hashCode();
 
     bool equals(State other);
 

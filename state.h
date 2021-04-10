@@ -19,7 +19,7 @@ class State {
     static vector<int> Magent_colors;
     static vector<int> Mbox_colors;
     vector<Action> Mjoint_action;
-    // final State Mparent;
+    State *Mparent;
     int Mg; // depth
     int Mhash = 0;
 

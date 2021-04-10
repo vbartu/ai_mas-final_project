@@ -19,7 +19,8 @@ State::State(){};
 
 State::State(vector<vector<bool>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
              vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<int> &Aagent_rows,
-             vector<int> &Aagent_cols) {
+             vector<int> &Aagent_cols)
+ {
     Mwalls = Awalls;
     Mgoals = Agoals;
     Mbox_colors = Abox_colors;
@@ -48,7 +49,7 @@ State::State(const State &state) {
     Mjoint_action = state.Mjoint_action;
     Mg = state.Mg;
     Mhash = state.Mhash;
-    // Mparent(this->Mparent);
+    Mparent = state.Mparent;
 };
 
     // To check if two state are equals
@@ -61,8 +62,8 @@ bool State::operator==(const State &other) {
          && this->Mbox_colors == other.Mbox_colors
          && this->Mjoint_action == other.Mjoint_action
          && this->Mg == other.Mg
-         && this->Mhash == other.Mhash;
-         // && this->Mparent == other.Mparent;
+         && this->Mhash == other.Mhash
+         && this->Mparent == other.Mparent;
 };
 
 /*
@@ -132,7 +133,7 @@ State State::apply_action(vector<Action> joint_action) {
       }
     }
     State copy_state(copy_agents_rows, copy_agents_cols, copy_boxes);
-    // copy_state.Mparent = this;
+    copy_state.Mparent = this;
     copy_state.Mjoint_action = joint_action;
     copy_state.Mg = this->Mg + 1;
     return copy_state;
@@ -285,7 +286,7 @@ vector<vector<Action>> State::extract_plan() {
     State state = *this;
     while (! state.Mjoint_action.empty()) {
       plan[state.Mg - 1]= state.Mjoint_action;
-      // state = state.Mparent;
+      state = *state.Mparent;
     }
     return plan;
 };
@@ -320,7 +321,7 @@ bool State::equals(State other)  {
     if (state == other) {
       return true;
     }
-    if (typeid(other).name() == "State" ) {
+    if (typeid(other).name() == typeid(state).name() ) {
       return false;
     }
     if (this->Magent_rows != other.Magent_rows) {

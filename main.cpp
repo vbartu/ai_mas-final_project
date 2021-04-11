@@ -55,35 +55,35 @@ int main () {
 	getline(cin, line);
 	while (line[0] != '#') {
 		initial_state_lines[n_rows++] = line;
-		
+
 		if (line.length() > n_cols)
-			n_cols = line.length();
+			n_cols = line.length() -1;
 		getline(cin, line);
 	}
 
 
 	// Parse initial state
-	vector<vector<bool>> walls(n_rows);
-	vector<vector<char>> boxes(n_rows);
-	vector<vector<char>> goals(n_rows);
+	vector<vector<bool>> walls;
+	vector<vector<char>> boxes;
+	vector<vector<char>> goals;
 
 	for (int i= 0; i < n_rows; i++) {
-		vector<bool> n_wall(n_cols);
+		vector<bool> n_wall;
 		walls.push_back(n_wall);
-		vector<char> n_box(n_cols);
+		vector<char> n_box;
 		boxes.push_back(n_box);
-		vector<char> n_goal(n_cols);
+		vector<char> n_goal;
 		goals.push_back(n_goal);
+
 		for (int j = 0; j < n_cols; j++) {
 			walls[i].push_back(false);
-			boxes[i].push_back(false);
-			goals[i].push_back(false);
+			boxes[i].push_back(' ');
+			goals[i].push_back(' ');
 		}
 	}
 
 	vector<int> agent_rows;
 	vector<int> agent_cols;
-
 
 	for (int i= 0; i < n_rows; i++) {
 		line = initial_state_lines[i];
@@ -92,9 +92,7 @@ int main () {
 			if (c == ' ') {
 				continue;
 			} else if (c == '+') {
-
 				walls[i][j] = true;
-
 			} else if ('0' <= c && c <= '9') {
 				agent_rows.push_back(i);
 				agent_cols.push_back(j);
@@ -103,8 +101,6 @@ int main () {
 			}
 		}
 	}
-
-
 
 	getline(cin, line);
 	for (int i = 0; line[0] != '#'; i++) {
@@ -119,7 +115,6 @@ int main () {
 		getline(cin, line);
 	}
 
-	
 	State::Magent_colors = agent_colors;
 	State::Mwalls = walls;
 	State::Mgoals = goals;
@@ -129,7 +124,7 @@ int main () {
 
 	vector<vector<Action>> result = search(initial_state, frontier);
 
-	cout << "#" << "Result: " << result.size() << endl;
+	// cout << "#" << result 
 
 	for(int i = 0; i < result.size(); i++) {
 		string join_action = "";

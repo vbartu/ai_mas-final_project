@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <unordered_set>
 
 #include "state.h"
 #include "frontier.h"
@@ -37,7 +38,7 @@ void print_search_status(vector<State> explored, Frontier &frontier, State state
     cout << "G: " << explored.size() + frontier.size();
     //out << "T: " << elapsed_time << "s";
     // cout << "M: " << memory.get_usage;
-    cout << "D: " << state.Mg;
+    cout << "D: " << state.g;
     if (same_line) {
       char end = '\r';
     }
@@ -56,6 +57,13 @@ void print_bar() {
       // flush=True
 }
 
+class HashHelper {
+public:
+	int operator()(const State& state) const {
+		return state.hashCode();
+	}
+};
+
 
 vector<vector<Action>> search(State initial_state, Frontier &frontier) {
     bool output_fixed_solution = false;
@@ -67,8 +75,9 @@ vector<vector<Action>> search(State initial_state, Frontier &frontier) {
     else {
       int iterations = 0;
 
+
       frontier.add(initial_state);
-      vector<State> explored;
+      unordered_set<State, HashHelper> explored;
 
       while (true) {
 
@@ -78,14 +87,19 @@ vector<vector<Action>> search(State initial_state, Frontier &frontier) {
   				return action_vector;
         }
 
+
         // Get next node to be explored from the frontier
         State leaf_node = frontier.pop();
 
         iterations += 1;
         //Print a status message every 10000 iteration
-        if (iterations % 10000 == 0) {
+        if (iterations % 100 == 0) {
           // print_search_status(explored, frontier, state, same_line=False):
+		cout << "#" << "ss: " << explored.size() << endl;
+		cout << "#" << "ff: " << frontier.size() << endl;
+		  cerr << leaf_node.repr() << endl;
         }
+
 
         // if memory.
 
@@ -97,33 +111,18 @@ vector<vector<Action>> search(State initial_state, Frontier &frontier) {
           return leaf_node.extract_plan();
         }
 
+
         // If not, add the node to the explored set, get its successors
         // and if they are not alreay explored or in the frontier,
         // add them to the frontier
-        bool found = false;
-        for(int i = 0; i< explored.size(); i++){
-          if (explored[i] == leaf_node) {
-            found = true;
-            break;
-          }
-        if(!found) {
-          explored.push_back(leaf_node);
-        }
+		explored.insert(leaf_node);
+		vector<State> ss = leaf_node.get_expanded_states();
 
-        vector<State> new_nodes = leaf_node.get_expanded_states();
-        for (State node: new_nodes) {
-          bool found = false;
-          for(int i = 0; i < explored.size(); i++){
-            if (explored[i] == node) {
-              found = true;
-              break;
-            }
-          }
-          if (!frontier.contains(node) &&  !found) {
-            frontier.add(node);
-          }
-        }
+        for (State node: ss) {
+			if (!frontier.contains(node) && !explored.count(node)) {
+				frontier.add(node);
+			}
+		}
       }
     }
-  }
 }

@@ -11,30 +11,26 @@ class State {
   // private:
     // const  int RNG = rand()%1;
   public:
-    vector<int> Magent_rows;
-    vector<int> Magent_cols;
-    vector<vector<char>> Mboxes;
-    static vector<vector<bool>> Mwalls;
-    static vector<vector<char>> Mgoals;
-    static vector<int> Magent_colors;
-    static vector<int> Mbox_colors;
-    vector<Action> Mjoint_action;
-    State *Mparent;
-    int Mg; // depth
-    int Mhash = 0;
+    vector<int> agent_rows;
+    vector<int> agent_cols;
+    vector<vector<char>> boxes;
+    static vector<vector<bool>> walls;
+    static vector<vector<char>> goals;
+    static vector<int> agent_colors;
+    static vector<int> box_colors;
+    vector<Action> joint_action;
+    State *parent;
+    int g; // depth
 
     // Constructor
     State();
 
-    State(vector<vector<bool>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
-          vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<int> &Aagent_rows,
-          vector<int> &Aagent_cols);
-
-    State(vector<int> &Aagent_rows, vector<int> &Aagent_cols, vector<vector<char>> &Aboxes);
+	State(vector<vector<char>> boxes, vector<int> &Aagent_rows,
+		vector<int> &Aagent_cols);
 
     State(const State &state);
 
-    bool operator==(const State &other);
+    bool operator==(const State &other) const;
 
     State apply_action(vector<Action> joint_action);
 
@@ -50,7 +46,7 @@ class State {
 
     vector<vector<Action>> extract_plan();
 
-    int hashCode();
+    int hashCode() const;
 
     bool equals(State other);
 

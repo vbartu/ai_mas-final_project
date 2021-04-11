@@ -115,16 +115,17 @@ int main () {
 		getline(cin, line);
 	}
 
-	State::Magent_colors = agent_colors;
-	State::Mwalls = walls;
-	State::Mgoals = goals;
-	State initial_state(walls, goals, box_colors, boxes, agent_colors, agent_rows, agent_cols);
+	State::agent_colors = agent_colors;
+	State::walls = walls;
+	State::goals = goals;
+	State::box_colors = box_colors;
+	State initial_state(boxes, agent_rows, agent_cols);
 
 	FrontierBFS frontier;
 
 	vector<vector<Action>> result = search(initial_state, frontier);
 
-	// cout << "#" << result 
+	cout << "#" << "Result: " << result.size() << endl;
 
 	for(int i = 0; i < result.size(); i++) {
 		string join_action = "";

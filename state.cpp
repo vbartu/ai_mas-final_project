@@ -9,77 +9,42 @@
 
 using namespace std;
 
-vector<vector<bool>> State::Mwalls;
-vector<vector<char>> State::Mgoals;
-vector<int> State::Magent_colors;
-vector<int> State::Mbox_colors;
+vector<vector<bool>> State::walls;
+vector<vector<char>> State::goals;
+vector<int> State::agent_colors;
+vector<int> State::box_colors;
 
-// Constructor
-State::State(){};
+State::State() {};
 
-State::State(vector<vector<bool>> &Awalls, vector<vector<char>> &Agoals, vector<int> &Abox_colors,
-             vector<vector<char>> &Aboxes, vector<int> &Aagent_colors, vector<int> &Aagent_rows,
-             vector<int> &Aagent_cols)
- {
-    Mwalls = Awalls;
-    Mgoals = Agoals;
-    Mbox_colors = Abox_colors;
-    Mboxes = Aboxes;
-    Magent_colors = Aagent_colors;
-    Magent_rows = Aagent_rows;
-    Magent_cols = Aagent_cols;
-  };
-
-
-State::State(vector<int> &Aagent_rows, vector<int> &Aagent_cols, vector<vector<char>> &Aboxes) {
-    Magent_rows = Aagent_rows;
-    Magent_cols = Aagent_cols;
-    Mboxes = Aboxes;
+State::State(vector<vector<char>> boxes, vector<int> &agent_rows,
+		vector<int> &agent_cols) {
+    this->boxes = boxes;
+    this->agent_rows = agent_rows;
+    this->agent_cols = agent_cols;
+	this->g = 0;
 };
 
 
-    // Copy Constructor
 State::State(const State &state) {
-    Magent_rows = state.Magent_rows;
-    Magent_cols = state.Magent_cols;
-    Mboxes = state.Mboxes;
-    Mwalls = state.Mwalls;
-    Magent_colors = state.Magent_colors;
-    Mbox_colors = state.Mbox_colors;
-    Mjoint_action = state.Mjoint_action;
-    Mg = state.Mg;
-    Mhash = state.Mhash;
-    Mparent = state.Mparent;
+    agent_rows = state.agent_rows;
+    agent_cols = state.agent_cols;
+    boxes = state.boxes;
+    walls = state.walls;
+    agent_colors = state.agent_colors;
+    box_colors = state.box_colors;
+    joint_action = state.joint_action;
+    g = state.g;
+    parent = state.parent;
 };
 
-    // To check if two state are equals
-bool State::operator==(const State &other) {
-  return this->Magent_rows == other.Magent_rows
-         && this->Magent_cols == other.Magent_cols
-         && this->Mboxes == other.Mboxes
-         && this->Mwalls == other.Mwalls
-         && this->Magent_colors == other.Magent_colors
-         && this->Mbox_colors == other.Mbox_colors
-         && this->Mjoint_action == other.Mjoint_action
-         && this->Mg == other.Mg
-         && this->Mhash == other.Mhash
-         && this->Mparent == other.Mparent;
+bool State::operator==(const State &other) const {
+  return this->agent_rows == other.agent_rows
+         && this->agent_cols == other.agent_cols
+         && this->boxes == other.boxes
+         && this->joint_action == other.joint_action
+         && this->g == other.g
+         && this->parent == other.parent;
 };
-
-/*
-bool operator==(State state1, State state2) {
-  return state1.Magent_rows == state2.Magent_rows
-         && state1.Magent_cols == state2.Magent_cols
-         && state1.Mboxes == state2.Mboxes
-         && state1.Mwalls == state2.Mwalls
-         && state1.Magent_colors == state2.Magent_colors
-         && state1.Mbox_colors == state2.Mbox_colors
-         && state1.Mjoint_action == state2.Mjoint_action
-         && state1.Mg == state2.Mg
-         && Mhash == state2.Mhash;
-         // && state1.Mparent == state2.Mparent;
-}
-*/
 
 State State::apply_action(vector<Action> joint_action) {
     /*
@@ -88,9 +53,9 @@ State State::apply_action(vector<Action> joint_action) {
     */
 
     // Copy this state-
-    vector<int> copy_agents_rows(this->Magent_rows);
-    vector<int> copy_agents_cols(this->Magent_cols);
-    vector<vector<char>> copy_boxes(this->Mboxes);
+    vector<int> copy_agents_rows(this->agent_rows);
+    vector<int> copy_agents_cols(this->agent_cols);
+    vector<vector<char>> copy_boxes(this->boxes);
 
     // Appy each action.
     for (int agent = 0; agent < joint_action.size(); agent++) {
@@ -109,8 +74,8 @@ State State::apply_action(vector<Action> joint_action) {
         copy_agents_rows[agent] += joint_action[agent].ard;
         copy_agents_cols[agent] += joint_action[agent].acd;
         // Box current and future position
-        int box_row = this->Magent_rows[agent] + joint_action[agent].ard;
-        int box_col = this->Magent_cols[agent] + joint_action[agent].acd;
+        int box_row = this->agent_rows[agent] + joint_action[agent].ard;
+        int box_col = this->agent_cols[agent] + joint_action[agent].acd;
         int box_dst_row = box_row + joint_action[agent].brd;
         int box_dst_col = box_col + joint_action[agent].bcd;
         // Copy box to new cell, the delete it from the old one
@@ -123,8 +88,8 @@ State State::apply_action(vector<Action> joint_action) {
         copy_agents_rows[agent] += joint_action[agent].ard;
         copy_agents_cols[agent] += joint_action[agent].acd;
         // Box current and future position
-        int box_row = this->Magent_rows[agent] - joint_action[agent].ard;
-        int box_col = this->Magent_cols[agent] - joint_action[agent].acd;
+        int box_row = this->agent_rows[agent] - joint_action[agent].ard;
+        int box_col = this->agent_cols[agent] - joint_action[agent].acd;
         int box_dst_row = box_row + joint_action[agent].brd;
         int box_dst_col = box_col + joint_action[agent].bcd;
         // Copy box to new cell, the delete it from the old one
@@ -132,23 +97,23 @@ State State::apply_action(vector<Action> joint_action) {
         copy_boxes[box_row][box_col] = ' ';
       }
     }
-    State copy_state(copy_agents_rows, copy_agents_cols, copy_boxes);
-    copy_state.Mparent = this;
-    copy_state.Mjoint_action = joint_action;
-    copy_state.Mg = this->Mg + 1;
+    State copy_state(copy_boxes, copy_agents_rows, copy_agents_cols);
+    copy_state.parent = this;
+    copy_state.joint_action = joint_action;
+    copy_state.g = this->g + 1;
     return copy_state;
 };
 
 
 bool State::is_goal_state() {
     char goal;
-    for (int row = 0; row < this->Mgoals.size(); row++) {
-      for (int col = 0; col < this->Mgoals[row].size(); col++) {
-        goal = this->Mgoals[row][col];
-        if ('A' <= goal && goal <= 'Z' && this->Mboxes[row][col] != goal) {
+    for (int row = 0; row < this->goals.size(); row++) {
+      for (int col = 0; col < this->goals[row].size(); col++) {
+        goal = this->goals[row][col];
+        if ('A' <= goal && goal <= 'Z' && this->boxes[row][col] != goal) {
           return false;
         }
-        else if ('0' <= goal && goal <= '9' && (!(this->Magent_rows[int(goal) - int('0')] == row && this->Magent_cols[int(goal) - int('0')] == col))) {
+        else if ('0' <= goal && goal <= '9' && (!(this->agent_rows[int(goal) - int('0')] == row && this->agent_cols[int(goal) - int('0')] == col))) {
           return false;
         }
       }
@@ -158,10 +123,12 @@ bool State::is_goal_state() {
 
 
 vector<State> State::get_expanded_states() {
-    int num_agents = this->Magent_rows.size();
+    int num_agents = this->agent_rows.size();
     // Determine list of applicable action for each individual agent
     vector<vector<Action>> applicable_actions;
     for (int agent = 0; agent < num_agents; agent++) {
+		vector<Action> aux;
+		applicable_actions.push_back(aux);
       for (int act = 0; act < ACTION_LIST_SIZE; act++) {
         Action action = action_list[act];
         if (is_applicable(agent, action)) {
@@ -178,8 +145,9 @@ vector<State> State::get_expanded_states() {
         joint_action.push_back(applicable_actions[agent][actions_permutation[agent]]);
       }
       // if (! is_conflicting(joint_action)) {
-      //   expanded_states.push_back(apply_action(joint_action));
+      expanded_states.push_back(apply_action(joint_action));
       // }
+
       // Advance permutation.
       bool done = false;
       for (int agent = 0; agent < num_agents; agent++) {
@@ -204,9 +172,9 @@ vector<State> State::get_expanded_states() {
 
 
 bool State::is_applicable(int agent, Action action) {
-    int agent_row = this->Magent_rows[agent];
-    int agent_col = this->Magent_cols[agent];
-    int agent_color = this->Magent_colors[agent];
+    int agent_row = this->agent_rows[agent];
+    int agent_col = this->agent_cols[agent];
+    int agent_color = this->agent_colors[agent];
 
     if (action.type == ActionType::NOOP) {
       return true;
@@ -221,14 +189,14 @@ bool State::is_applicable(int agent, Action action) {
     else if (action.type == ActionType::PUSH) {
       int box_row = agent_row + action.ard;
       int box_col = agent_col + action.acd;
-      char box = this->Mboxes[box_row][box_col];
+      char box = this->boxes[box_row][box_col];
 
       // Check if there is a box in the given direction,
       // and if the box belongs to this agent (same color)
       if (box == ' ') {
         return false;
       }
-      int box_color = this->Mbox_colors[int(box) - int('A')];
+      int box_color = this->box_colors[int(box) - int('A')];
       if (box_color != agent_color) {
         return false;
       }
@@ -242,14 +210,14 @@ bool State::is_applicable(int agent, Action action) {
     else if (action.type == ActionType::PULL) {
       int box_row = agent_row - action.brd;
       int box_col = agent_col - action.bcd;
-      char box = this->Mboxes[box_row][box_col];
+      char box = this->boxes[box_row][box_col];
 
       // Check if there is a box in the given direction,
       // and if the box belongs to this agent (same color)
       if (box == ' ') {
         return false;
       }
-      int box_color = this->Mbox_colors[int(box) - int('A')];
+      int box_color = this->box_colors[int(box) - int('A')];
       if (box_color != agent_color) {
         return false;
       }
@@ -264,13 +232,13 @@ bool State::is_applicable(int agent, Action action) {
 
 
 bool State::is_free(int row, int col) {
-    return (! this->Mwalls[row][col] && this->Mboxes[row][col] == ' ' && agent_at(row,col)) == false;
+    return (! this->walls[row][col] && this->boxes[row][col] == ' ' && agent_at(row,col) == false);
 }
 
 
 char State::agent_at(int row, int col) {
-    for (int agent = 0; agent < this->Magent_rows.size(); agent++) {
-      if (this->Magent_rows[agent] == row && this->Magent_cols[agent] == col) {
+    for (int agent = 0; agent < this->agent_rows.size(); agent++) {
+      if (this->agent_rows[agent] == row && this->agent_cols[agent] == col) {
         return char(agent + int('0'));
       }
     }
@@ -279,40 +247,36 @@ char State::agent_at(int row, int col) {
 
 
 vector<vector<Action>> State::extract_plan() {
-    vector<vector<Action>> plan(this->Mg);
-    for (int i= 0; i < this->Mg; i++) {
-      plan.push_back(vector<Action>(this->Mjoint_action.size()));
+    vector<vector<Action>> plan(this->g);
+    for (int i= 0; i < this->g; i++) {
+      plan.push_back(vector<Action>(this->joint_action.size()));
     }
     State state = *this;
-    while (! state.Mjoint_action.empty()) {
-      plan[state.Mg - 1]= state.Mjoint_action;
-      state = *state.Mparent;
+    while (! state.joint_action.empty()) {
+      plan[state.g - 1]= state.joint_action;
+      state = *state.parent;
     }
     return plan;
 };
 
-
-int State::hashCode() {
-    if (this->Mhash == 0) {
+int State::hashCode() const {
       int prime = 31;
       int result = 1;
-      //result = prime * result + hashCode(this->Mbox_colors);
-      //result = prime * result + hashCode(this->Magent_colors);
-      //result = prime * result + hashCode(this->Mwalls);
-      //result = prime * result + hashCode(this->Mgoals);
-      //result = prime * result + hashCode(this->Magent_rows);
-      //result = prime * result + hashCode(this->Magent_cols);
-      for (int row = 0; row < this->Mboxes.size(); ++row) {
-        for (int col = 0; col < this->Mboxes[row].size(); ++col) {
-          char c = this->Mboxes[row][col];
+      //result = prime * result + hashCode(this->box_colors);
+      //result = prime * result + hashCode(this->agent_colors);
+      //result = prime * result + hashCode(this->walls);
+      //result = prime * result + hashCode(this->goals);
+      //result = prime * result + hashCode(this->agent_rows);
+      //result = prime * result + hashCode(this->agent_cols);
+      for (int row = 0; row < this->boxes.size(); ++row) {
+        for (int col = 0; col < this->boxes[row].size(); ++col) {
+          char c = this->boxes[row][col];
           if (c!=0) {
-            result = prime * result + (row * this->Mboxes[row].size() + col) * c;
+            result = prime * result + (row * this->boxes[row].size() + col) * c;
           }
         }
       }
-      this->Mhash = result;
-    }
-    return this->Mhash;
+	return result;
 };
 
 
@@ -324,25 +288,25 @@ bool State::equals(State other)  {
     if (typeid(other).name() == typeid(state).name() ) {
       return false;
     }
-    if (this->Magent_rows != other.Magent_rows) {
+    if (this->agent_rows != other.agent_rows) {
       return false;
     }
-    if (this->Magent_cols != other.Magent_cols) {
+    if (this->agent_cols != other.agent_cols) {
       return false;
     }
-    if (this->Magent_colors != other.Magent_colors) {
+    if (this->agent_colors != other.agent_colors) {
       return false;
     }
-    if (this->Mwalls != other.Mwalls) {
+    if (this->walls != other.walls) {
       return false;
     }
-    if (this->Mboxes != other.Mboxes) {
+    if (this->boxes != other.boxes) {
       return false;
     }
-    if (this->Mbox_colors != other.Mbox_colors) {
+    if (this->box_colors != other.box_colors) {
       return false;
     }
-    if (this->Mgoals != other.Mgoals) {
+    if (this->goals != other.goals) {
       return false;
     }
     return true;
@@ -352,34 +316,29 @@ bool State::equals(State other)  {
 string State::repr()
 {
     string lines;
-    for (int row = 0; row < this->Mboxes.size(); row++)
+    for (int row = 0; row < this->boxes.size(); row++)
     {
       string line;
-      for (int col = 0; col < this->Mboxes[row].size(); col++)
+      for (int col = 0; col < this->boxes[row].size(); col++)
       {
-        if (this->Mboxes[row][col] != ' ')
+        if (this->boxes[row][col] != ' ')
         {
-          line.append(to_string(this->Mboxes[row][col]));
+          line += this->boxes[row][col];
         }
-        else if (this->Mwalls[row][col] != false)
+        else if (this->walls[row][col] != false)
         {
-          line.append("+");
+          line += "+";
         }
         else if (agent_at(row,col) != false)
         {
-          line.append(to_string(agent_at(row,col)));
+          line += agent_at(row,col);
         }
         else
         {
-          line.append(" ");
+          line += " ";
         }
       }
-      for (int i = 1; i < line.length(); i += 3)
-      {
-        line.append(i, ' ');
-      }
-      lines.append(line);
-      lines.append("\n");
+      lines = lines + line + "\n";
     }
     return lines;
 };

@@ -2,28 +2,27 @@
 #define __ACTION_H
 
 #include <string>
+#include <vector>
 
 using namespace std;
-
-#define ACTION_LIST_SIZE 29
 
 enum ActionType {
 	NOOP = 0,
 	MOVE,
 	PUSH,
-  PULL
+	PULL
 };
 
 class Action {
-  public:
-    string name;
-    int type;
-    int ard; // horisontal displacement agent
-    int acd; // vertical displacement agent
-    int brd; // horisontal displacement box
-    int bcd; //vertical displacement box
+public:
+	string name;
+	int type;
+	int ard; // agent row delta
+	int acd; // agent column delta
+	int brd; // box row delta
+	int bcd; // box column delta
 
-	Action(){};
+	Action();
 
 	Action(string name, int type, int ard, int acd, int brd, int bcd);
 
@@ -32,6 +31,6 @@ class Action {
 
 };
 
-extern Action action_list[];
+extern vector<Action> actions;
 
 #endif

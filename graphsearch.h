@@ -7,6 +7,6 @@
 #include "state.h"
 #include "action.h"
 
-vector<vector<Action>> search(State initial_state, Frontier &frontier);
+vector<vector<Action>> search(State* initial_state, Frontier &frontier);
 
 #endif // __GRAPHSEARCH_H

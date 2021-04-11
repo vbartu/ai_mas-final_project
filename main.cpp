@@ -119,9 +119,11 @@ int main () {
 	State::walls = walls;
 	State::goals = goals;
 	State::box_colors = box_colors;
-	State initial_state(boxes, agent_rows, agent_cols);
+	State* initial_state = new State(boxes, agent_rows, agent_cols);
 
 	FrontierBFS frontier;
+
+	cerr << "initial " << initial_state << endl;
 
 	vector<vector<Action>> result = search(initial_state, frontier);
 

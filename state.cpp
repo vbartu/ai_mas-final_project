@@ -40,13 +40,10 @@ State::State(const State &state) {
 bool State::operator==(const State &other) const {
   return this->agent_rows == other.agent_rows
          && this->agent_cols == other.agent_cols
-         && this->boxes == other.boxes
-         && this->joint_action == other.joint_action
-         && this->g == other.g
-         && this->parent == other.parent;
+         && this->boxes == other.boxes;
 };
 
-State State::apply_action(vector<Action> joint_action) {
+State* State::apply_action(vector<Action> joint_action) {
     /*
     Returns the state resulting from applying joint_action in this state.
     Precondition: Joint action must be applicable and non-conflicting in this state.
@@ -97,11 +94,16 @@ State State::apply_action(vector<Action> joint_action) {
         copy_boxes[box_row][box_col] = ' ';
       }
     }
-    State copy_state(copy_boxes, copy_agents_rows, copy_agents_cols);
-    copy_state.parent = this;
-    copy_state.joint_action = joint_action;
-    copy_state.g = this->g + 1;
-    return copy_state;
+
+	State* copy_state;
+	copy_state = new State(copy_boxes, copy_agents_rows, copy_agents_cols);
+    copy_state->parent = this;
+    copy_state->joint_action = joint_action;
+    copy_state->g = this->g + 1;
+
+	//cerr << "Parent: " << this << ", Child(" << g << "): " << copy_state << endl;
+
+    return  copy_state;
 };
 
 
@@ -122,30 +124,31 @@ bool State::is_goal_state() {
 };
 
 
-vector<State> State::get_expanded_states() {
+vector<State*> State::get_expanded_states() {
     int num_agents = this->agent_rows.size();
     // Determine list of applicable action for each individual agent
     vector<vector<Action>> applicable_actions;
     for (int agent = 0; agent < num_agents; agent++) {
 		vector<Action> aux;
 		applicable_actions.push_back(aux);
-      for (int act = 0; act < ACTION_LIST_SIZE; act++) {
-        Action action = action_list[act];
+      for (int act = 0; act < actions.size(); act++) {
+        Action action = actions[act];
         if (is_applicable(agent, action)) {
           applicable_actions[agent].push_back(action);
         }
       }
     }
     // Iterate over joint actions, check conflict and generate child states.
-    vector<Action> joint_action (num_agents);
+    vector<Action> joint_action(num_agents, actions[0]);
     int actions_permutation[num_agents] = {};
-    vector<State> expanded_states;
+    vector<State*> expanded_states;
     while (true) {
       for (int agent = 0; agent < num_agents; agent++) {
-        joint_action.push_back(applicable_actions[agent][actions_permutation[agent]]);
+        joint_action[agent] = applicable_actions[agent][actions_permutation[agent]];
       }
       // if (! is_conflicting(joint_action)) {
-      expanded_states.push_back(apply_action(joint_action));
+	  State* aux_state = apply_action(joint_action);
+      expanded_states.push_back(aux_state);
       // }
 
       // Advance permutation.
@@ -251,10 +254,10 @@ vector<vector<Action>> State::extract_plan() {
     for (int i= 0; i < this->g; i++) {
       plan.push_back(vector<Action>(this->joint_action.size()));
     }
-    State state = *this;
-    while (! state.joint_action.empty()) {
-      plan[state.g - 1]= state.joint_action;
-      state = *state.parent;
+    State* state = this;
+    while (! state->joint_action.empty()) {
+      plan[state->g - 1] = state->joint_action;
+      state = state->parent;
     }
     return plan;
 };

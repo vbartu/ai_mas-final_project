@@ -32,11 +32,11 @@ class State {
 
     bool operator==(const State &other) const;
 
-    State apply_action(vector<Action> joint_action);
+    State* apply_action(vector<Action> joint_action);
 
     bool is_goal_state();
 
-    vector<State> get_expanded_states();
+    vector<State*> get_expanded_states();
 
     bool is_applicable(int agent, Action action);
 

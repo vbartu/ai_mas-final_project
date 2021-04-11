@@ -10,119 +10,55 @@
 
 using namespace std;
 
-auto start_time = chrono::system_clock::now();
-
-void print_search_status(vector<State> explored, Frontier &frontier, State state, bool same_line = false) {
-  auto end = chrono::system_clock::now();
-  //long elapsed_time = start_time - end;
-
-  //if (isinstance(frontier, FrontierBestFirst)) {
-  //  cout << "E: " << explored.size();
-  //  cout << "G: " << explored.size() + frontier.size();
-  //  cout << "T: " << elapsed_time << "s";
-  //  // cout << "M: " << memory.get_usage;
-  //  cout << "D: " << state.Mg;
-  //  cout << "H: " << frontier.last_f;
-  //  if (same_line) {
-  //    char end = '\r';
-  //  }
-  //  else {
-  //    char end = '\n';
-  //  }
-  //  // file = sys.stderr;
-  //  // flush=true;
-  //}
-
-  //else {
-    cout << "E: " << explored.size();
-    cout << "G: " << explored.size() + frontier.size();
-    //out << "T: " << elapsed_time << "s";
-    // cout << "M: " << memory.get_usage;
-    cout << "D: " << state.g;
-    if (same_line) {
-      char end = '\r';
-    }
-    else {
-      char end = '\n';
-    }
-    // file = sys.stderr;
-    // flush=true;
-  }
-//}
-
-
-void print_bar() {
-  cout << "=================================================" << endl;
-      // file=sys.stderr,
-      // flush=True
-}
-
 class HashHelper {
 public:
-	int operator()(const State& state) const {
-		return state.hashCode();
+	int operator()(const State* state) const {
+		return state->hashCode();
 	}
 };
 
+vector<vector<Action>> search(State* initial_state, Frontier &frontier) {
+	int iterations = 0;
+	frontier.add(initial_state);
+	unordered_set<State*, HashHelper> explored;
 
-vector<vector<Action>> search(State initial_state, Frontier &frontier) {
-    bool output_fixed_solution = false;
-    if (output_fixed_solution) {
-            //return Action[] = {MoveS, MoveN, MoveN};
-  		  vector<vector<Action>> action_vector;
-  		  return action_vector;
-    }
-    else {
-      int iterations = 0;
+	while (true) {
+		// TODO: Return error is frontier is empty
+		if(frontier.size() == 0) {
+			vector<vector<Action>> action_vector;
+			return action_vector;
+		}
 
+		// Get next node to be explored from the frontier
+		State* state = frontier.pop();
+		//cerr << "New node: " << state << endl;
+		//cerr << state->repr();
 
-      frontier.add(initial_state);
-      unordered_set<State, HashHelper> explored;
-
-      while (true) {
-
-        // Return error is frontier is empty
-        if(frontier.size() == 0) {
-  				vector<vector<Action>> action_vector;
-  				return action_vector;
-        }
-
-
-        // Get next node to be explored from the frontier
-        State leaf_node = frontier.pop();
-
-        iterations += 1;
-        //Print a status message every 10000 iteration
-        if (iterations % 100 == 0) {
-          // print_search_status(explored, frontier, state, same_line=False):
-		cout << "#" << "ss: " << explored.size() << endl;
-		cout << "#" << "ff: " << frontier.size() << endl;
-		  cerr << leaf_node.repr() << endl;
-        }
+		iterations += 1;
+		if (iterations % 100 == 0) {
+			cout << "#" << "Explored: " << explored.size() << endl;
+			cout << "#" << "Frontier: " << frontier.size() << endl;
+		}
 
 
-        // if memory.
-
-        // If this state is a goal state, solition is found
-        // Return the path (list of actions) followed to get to this state
-        if (leaf_node.is_goal_state()) {
-          print_bar();
-          //print_search_status();
-          return leaf_node.extract_plan();
-        }
+		// If this state is a goal state, solition is found
+		// Return the path (list of actions) followed to get to this state
+		if (state->is_goal_state()) {
+			cerr << "Finished!" << endl;
+			return state->extract_plan();
+		}
 
 
-        // If not, add the node to the explored set, get its successors
-        // and if they are not alreay explored or in the frontier,
-        // add them to the frontier
-		explored.insert(leaf_node);
-		vector<State> ss = leaf_node.get_expanded_states();
+		// If not, add the node to the explored set, get its successors
+		// and if they are not alreay explored or in the frontier,
+		// add them to the frontier
+		explored.insert(state);
+		vector<State*> expanded_states = state->get_expanded_states();
 
-        for (State node: ss) {
-			if (!frontier.contains(node) && !explored.count(node)) {
-				frontier.add(node);
+		for (State* new_state: expanded_states) {
+			if (!frontier.contains(new_state) && !explored.count(new_state)) {
+				frontier.add(new_state);
 			}
 		}
-      }
-    }
+	}
 }

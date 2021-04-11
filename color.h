@@ -2,7 +2,7 @@
 #define __COLOR_H
 
 #include <string>
-#include <cstdio>
+
 using namespace std;
 
 enum color {

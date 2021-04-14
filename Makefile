@@ -1,7 +1,8 @@
 CC = g++
 
 # C++ compiler option
-CXXFLAGS = -Wall -O2
+#CXXFLAGS = -Wall -O2
+CXXFLAGS =
 
 # linker option
 LDFLAGS =
@@ -10,7 +11,7 @@ LDFLAGS =
 SRC_DIR = ${CURDIR}
 
 # obj file dir
-OBJ_DIR = ${CURDIR}
+OBJ_DIR = ${CURDIR}/build
 
 # exec file name
 TARGET = main
@@ -24,16 +25,25 @@ OBJECTS = $(patsubst %.o,$(OBJ_DIR)/%.o,$(OBJS))
 DEPS = $(OBJECTS:.o=.d)
 
 all: main
+	@echo "Finished: main"
 
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CC) $(CXXFLAGS) -c $< -o $@ -MD $(LDFLAGS)
+$(OBJ_DIR) : 
+	@mkdir -p $@
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(OBJ_DIR)
+	@$(CC) $(CXXFLAGS) -c $< -o $@ -MD $(LDFLAGS)
+	@echo "Compiling $(notdir $<)"
 
 $(TARGET) : $(OBJECTS)
-	$(CC) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+	@$(CC) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-.PHONY: clean all
+.PHONY: clean all run
 clean:
-	rm -f $(OBJECTS) $(DEPS) $(TARGET) *.o *.d
+	@rm -rf $(OBJ_DIR) $(TARGET)
+	@echo "Project cleared"
+
+run: all
+	java -jar server/server.jar -c ./main -l server/levels/MAPF01.lvl -g
+
 
 -include $(DEPS)
-

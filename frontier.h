@@ -4,6 +4,7 @@
 #include <string>
 #include <deque>
 #include <unordered_set>
+#include "fake_set.h"
 
 #include "state.h"
 
@@ -30,7 +31,8 @@ class Frontier {
 class FrontierBFS: public Frontier {
   public:
     deque<State*> queue;
-    unordered_set<State*, HashHelper2> set;
+    //unordered_set<State*, HashHelper2> set;
+	FakeSet set;
 
     void add(State* state);
     State* pop();

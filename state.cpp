@@ -250,7 +250,7 @@ char State::agent_at(int row, int col) {
 
 
 vector<vector<Action>> State::extract_plan() {
-    vector<vector<Action>> plan(this->g);
+    vector<vector<Action>> plan;
     for (int i= 0; i < this->g; i++) {
       plan.push_back(vector<Action>(this->joint_action.size()));
     }

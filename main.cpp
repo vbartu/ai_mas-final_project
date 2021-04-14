@@ -127,18 +127,20 @@ int main () {
 
 	vector<vector<Action>> result = search(initial_state, frontier);
 
-	cout << "#" << "Result: " << result.size() << endl;
+	cout << "#" << "Result length: " << result.size() << endl;
 
 	for(int i = 0; i < result.size(); i++) {
 		string join_action = "";
 		for (int j = 0; j < result[i].size(); j++) {
 			join_action += result[i][j].name;
-			if (j != result[i].size()) {
+			if (j != result[i].size()-1) {
 				join_action += ";";
 			}
 		}
 		cout << join_action << endl;
+		getline(cin, line);
 	}
+
 	return 0;
 
 }

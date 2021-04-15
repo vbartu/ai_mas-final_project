@@ -3,7 +3,6 @@
 #include <chrono>
 #include <vector>
 #include <unordered_set>
-#include "fake_set.h"
 
 #include "state.h"
 #include "frontier.h"
@@ -11,18 +10,10 @@
 
 using namespace std;
 
-class HashHelper {
-public:
-	int operator()(const State* state) const {
-		return state->hashCode();
-	}
-};
-
 vector<vector<Action>> search(State* initial_state, Frontier &frontier) {
 	int iterations = 0;
 	frontier.add(initial_state);
-	//unordered_set<State*, HashHelper> explored;
-	FakeSet explored;
+	unordered_set<State*, HashHelper, EqualHelper> explored;
 
 	while (true) {
 		// TODO: Return error is frontier is empty

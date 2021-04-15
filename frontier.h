@@ -4,18 +4,10 @@
 #include <string>
 #include <deque>
 #include <unordered_set>
-#include "fake_set.h"
 
 #include "state.h"
 
 using namespace std;
-
-class HashHelper2 {
-public:
-	int operator()(const State* state) const {
-		return state->hashCode();
-	}
-};
 
 class Frontier {
   public:
@@ -31,8 +23,7 @@ class Frontier {
 class FrontierBFS: public Frontier {
   public:
     deque<State*> queue;
-    //unordered_set<State*, HashHelper2> set;
-	FakeSet set;
+    unordered_set<State*, HashHelper, EqualHelper> set;
 
     void add(State* state);
     State* pop();

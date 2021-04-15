@@ -57,4 +57,18 @@ class State {
     string repr();
 };
 
+class HashHelper {
+	public:
+		int operator()(const State* state) const {
+			return state->hashCode();
+		}
+};
+
+class EqualHelper {
+	public:
+		int operator()(const State* state1, const State* state2) const {
+			return *state1 == *state2;
+		}
+};
+
 #endif

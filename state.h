@@ -25,8 +25,7 @@ class State {
     // Constructor
     State();
 
-	State(vector<vector<char>> boxes, vector<int> &Aagent_rows,
-		vector<int> &Aagent_cols);
+    State(vector<vector<char>> boxes, vector<int> &Aagent_rows,	vector<int> &Aagent_cols);
 
     State(const State &state);
 

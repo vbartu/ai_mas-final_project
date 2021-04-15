@@ -22,6 +22,17 @@ State::State(vector<vector<char>> boxes, vector<int> &agent_rows,
     this->agent_rows = agent_rows;
     this->agent_cols = agent_cols;
 	this->g = 0;
+	this->is_simplified = false;
+};
+
+State::State(vector<vector<char>> boxes, vector<int> &agent_rows,
+		vector<int> &agent_cols, vector<vector<char>> simplified_goals) {
+    this->boxes = boxes;
+	this->simplified_goals = simplified_goals;
+    this->agent_rows = agent_rows;
+    this->agent_cols = agent_cols;
+	this->g = 0;
+	this->is_simplified = true;
 };
 
 
@@ -108,19 +119,39 @@ State* State::apply_action(vector<Action> joint_action) {
 
 
 bool State::is_goal_state() {
-    char goal;
-    for (int row = 0; row < this->goals.size(); row++) {
-      for (int col = 0; col < this->goals[row].size(); col++) {
-        goal = this->goals[row][col];
-        if ('A' <= goal && goal <= 'Z' && this->boxes[row][col] != goal) {
-          return false;
-        }
-        else if ('0' <= goal && goal <= '9' && (!(this->agent_rows[int(goal) - int('0')] == row && this->agent_cols[int(goal) - int('0')] == col))) {
-          return false;
-        }
-      }
-    }
-    return true;
+	if (this->is_simplified) {
+		char goal;
+		for (int row = 0; row < this->simplified_goals.size(); row++) {
+			for (int col = 0; col < this->simplified_goals[row].size(); col++) {
+				goal = this->simplified_goals[row][col];
+				if ('A' <= goal && goal <= 'Z'
+						&& this->boxes[row][col] != goal) {
+					return false;
+				} else if ('0' <= goal && goal <= '9'
+						&& (!(this->agent_rows[int(goal) - int('0')] == row
+						&& this->agent_cols[int(goal) - int('0')] == col))) {
+					return false;
+				}
+			}
+		}
+		return true;
+	} else {
+		char goal;
+		for (int row = 0; row < this->goals.size(); row++) {
+			for (int col = 0; col < this->goals[row].size(); col++) {
+				goal = this->goals[row][col];
+				if ('A' <= goal && goal <= 'Z'
+						&& this->boxes[row][col] != goal) {
+					return false;
+				} else if ('0' <= goal && goal <= '9'
+						&& (!(this->agent_rows[int(goal) - int('0')] == row
+						&& this->agent_cols[int(goal) - int('0')] == col))) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 };
 
 
@@ -146,10 +177,20 @@ vector<State*> State::get_expanded_states() {
       for (int agent = 0; agent < num_agents; agent++) {
         joint_action[agent] = applicable_actions[agent][actions_permutation[agent]];
       }
-      // if (! is_conflicting(joint_action)) {
+      // TODO: if (! is_conflicting(joint_action))
 	  State* aux_state = apply_action(joint_action);
-      expanded_states.push_back(aux_state);
-      // }
+	  bool a = true;
+	  for (int row = 0; row < aux_state->boxes.size(); row++) {
+		  for (int col = 0; col < aux_state->boxes[row].size(); col++) {
+			  if (aux_state->walls[row][col]
+					  && aux_state->boxes[row][col] != ' ') {
+				  //cerr << "HEREEEE!!!!" << endl;
+				  a = false;
+				}
+		  }
+	  }
+	  if (a)
+		expanded_states.push_back(aux_state);
 
       // Advance permutation.
       bool done = false;
@@ -235,7 +276,8 @@ bool State::is_applicable(int agent, Action action) {
 
 
 bool State::is_free(int row, int col) {
-    return (! this->walls[row][col] && this->boxes[row][col] == ' ' && agent_at(row,col) == false);
+	return (!this->walls[row][col] && this->boxes[row][col] == ' '
+		&& !agent_at(row,col));
 }
 
 
@@ -328,11 +370,11 @@ string State::repr()
         {
           line += this->boxes[row][col];
         }
-        else if (this->walls[row][col] != false)
+        else if (this->walls[row][col])
         {
           line += "+";
         }
-        else if (agent_at(row,col) != false)
+        else if (agent_at(row,col))
         {
           line += agent_at(row,col);
         }

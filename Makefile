@@ -2,7 +2,7 @@ CC = g++
 
 # C++ compiler option
 #CXXFLAGS = -Wall -O2
-CXXFLAGS =
+CXXFLAGS = -O3
 
 # linker option
 LDFLAGS =

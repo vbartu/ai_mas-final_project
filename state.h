@@ -14,6 +14,8 @@ class State {
     vector<int> agent_rows;
     vector<int> agent_cols;
     vector<vector<char>> boxes;
+    vector<vector<char>> simplified_goals;
+	bool is_simplified;
     static vector<vector<bool>> walls;
     static vector<vector<char>> goals;
     static vector<int> agent_colors;
@@ -26,6 +28,9 @@ class State {
     State();
 
     State(vector<vector<char>> boxes, vector<int> &Aagent_rows,	vector<int> &Aagent_cols);
+
+	State(vector<vector<char>> boxes, vector<int> &agent_rows,
+		vector<int> &agent_cols, vector<vector<char>> simplified_goals);
 
     State(const State &state);
 

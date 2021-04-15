@@ -5,8 +5,8 @@
 
 #include "color.h"
 #include "graphsearch.h"
-#include "frontier.h"
 #include "state.h"
+#include "split_level.h"
 
 using namespace std;
 
@@ -106,9 +106,8 @@ int main () {
 	for (int i = 0; line[0] != '#'; i++) {
 		for (int j = 0; j < line.length(); j++) {
 			char c = line[j];
-			if (c == ' ' || c == '+') {
-				continue;
-			} else {
+			if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')) {
+				cerr << "Goal " << c << " in " << i << ", " << j << endl;
 				goals[i][j] = c;
 			}
 		}
@@ -121,12 +120,7 @@ int main () {
 	State::box_colors = box_colors;
 	State* initial_state = new State(boxes, agent_rows, agent_cols);
 
-	FrontierBFS frontier;
-
-	cerr << "initial " << initial_state << endl;
-
-	vector<vector<Action>> result = search(initial_state, frontier);
-
+	vector<vector<Action>> result = split_level(initial_state);
 	cout << "#" << "Result length: " << result.size() << endl;
 
 	for(int i = 0; i < result.size(); i++) {

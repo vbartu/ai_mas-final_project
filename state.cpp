@@ -107,7 +107,8 @@ State* State::apply_action(vector<Action> joint_action) {
     }
 
 	State* copy_state;
-	copy_state = new State(copy_boxes, copy_agents_rows, copy_agents_cols);
+	copy_state = new State(copy_boxes, copy_agents_rows, copy_agents_cols,
+		this->simplified_goals);
     copy_state->parent = this;
     copy_state->joint_action = joint_action;
     copy_state->g = this->g + 1;
@@ -310,7 +311,6 @@ int State::hashCode() const {
       //result = prime * result + hashCode(this->box_colors);
       //result = prime * result + hashCode(this->agent_colors);
       //result = prime * result + hashCode(this->walls);
-      //result = prime * result + hashCode(this->goals);
       //result = prime * result + hashCode(this->agent_rows);
       //result = prime * result + hashCode(this->agent_cols);
       for (int row = 0; row < this->boxes.size(); ++row) {
@@ -351,9 +351,6 @@ bool State::equals(State other)  {
     if (this->box_colors != other.box_colors) {
       return false;
     }
-    if (this->goals != other.goals) {
-      return false;
-    }
     return true;
 };
 
@@ -377,6 +374,32 @@ string State::repr()
         else if (agent_at(row,col))
         {
           line += agent_at(row,col);
+        }
+        else
+        {
+          line += " ";
+        }
+      }
+      lines = lines + line + "\n";
+    }
+    return lines;
+};
+
+string State::repr_goal()
+{
+    string lines;
+    for (int row = 0; row < this->boxes.size(); row++)
+    {
+      string line;
+      for (int col = 0; col < this->boxes[row].size(); col++)
+      {
+        if (this->simplified_goals[row][col] != ' ')
+        {
+          line += this->simplified_goals[row][col];
+        }
+        else if (this->walls[row][col])
+        {
+          line += "+";
         }
         else
         {

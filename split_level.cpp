@@ -32,8 +32,12 @@ vector<vector<Action>> split_level(State* initial_state)
 					boxes[j][k] = ' ';
 				}
 				char goal = goals[j][k];
-				if (goal >= '0' && goal <= '9' && (goal - '0') != i) {
-					goals[j][k] = ' ';
+				if (goal >= '0' && goal <= '9') {
+					if ((goal - '0') == i) {
+						goals[j][k] = '0';
+					} else {
+						goals[j][k] = ' ';
+					}
 				} else if (goal >= 'A' && goal <= 'Z'
 						&& initial_state->box_colors[goal - 'A'] != color) {
 					goals[j][k] = ' ';
@@ -53,6 +57,8 @@ vector<vector<Action>> split_level(State* initial_state)
 		}
 		cerr << "Agent " << i << ", Goals: " << n_goals << endl;
 		cerr << state->repr();
+		//cerr << endl;
+		//cerr << state->repr_goal();
 
 		FrontierBFS frontier;
 		vector<vector<Action>> result = search(state, frontier);

@@ -15,7 +15,7 @@ using namespace std;
 
 int main () {
 	cout << CLIENT_NAME << endl;
-	cout << "#" << "Starting" << endl;
+	////cout << "#" << "Starting" << endl;
 
 	string line;
 	getline(cin, line); // #domain
@@ -121,7 +121,7 @@ int main () {
 	State* initial_state = new State(boxes, agent_rows, agent_cols);
 
 	vector<vector<Action>> result = split_level(initial_state);
-	cout << "#" << "Result length: " << result.size() << endl;
+	cerr << "Final Result length: " << result.size() << endl;
 
 	for(int i = 0; i < result.size(); i++) {
 		string join_action = "";

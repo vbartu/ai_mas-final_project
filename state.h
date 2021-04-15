@@ -55,6 +55,8 @@ class State {
     bool equals(State other);
 
     string repr();
+
+    string repr_goal();
 };
 
 class HashHelper {

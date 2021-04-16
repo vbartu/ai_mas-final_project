@@ -5,7 +5,39 @@ using namespace std;
 Heuristic::Heuristic(State initial_state) {
   this->max_row = initial_state.goals.size();
   this->max_col = initial_state.goals[0].size();
+
 };
+
+
+vector<vector<int>> Heuristic::calculate_global_map(State initial_state) {
+  int pos = 0;
+  vector<vector<int>> global_map;
+  for (int i = 0; i < initial_state.walls.size(); i++) {
+    vector<int> n_col(initial_state.walls[i].size(), -1);
+    global_map.push_back(n_col);
+    for (int j = 0; j < initial_state.walls[i].size(); j++) {
+      if (initial_state.walls[i][j] == false) {
+        global_map[i][j] = pos++;
+      }
+    }
+  }
+  return global_map;
+}
+
+// // cell in x,y coordinate
+// vector<vector<array<int,2>>> Heuristic::calculate_global_map(State initial_state) {
+//   vector<vector<array<int,2>>> global_map;
+//   for (int i = 0; i < initial_state.walls.size(); i++) {
+//     vector<array<int,2>> n_col(initial_state.walls[i].size(), {-1,-1});
+//     global_map.push_back(n_col);
+//     for (int j = 0; j < initial_state.walls[i].size(); j++) {
+//       if (initial_state.walls[i][j] == false) {
+//         global_map[i][j] = {i,j};
+//       }
+//     }
+//   }
+//   return global_map;
+// }
 
 
 vector<array<int,2>> Heuristic::get_neighbours(State &state, vector<vector<int>> &distance_map, int row, int col) {

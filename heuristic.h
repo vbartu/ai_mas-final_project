@@ -21,6 +21,7 @@ class Heuristic {
 
     Heuristic();
     Heuristic(State initial_state);
+    vector<vector<int>> calculate_global_map(State initial_state);
     vector<array<int,2>> get_neighbours(State &state, vector<vector<int>> &distance_map, int row, int col);
     void set_adjacent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours);
     void set_adjacent_for_agent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours, int agent_color);

@@ -134,7 +134,7 @@ int main () {
 		for (int j = 0; j < result[i].size(); j++) {
 			join_action += result[i][j].name;
 			if (j != result[i].size()-1) {
-				join_action += ";";
+				join_action += "|";
 			}
 		}
 		cout << join_action << endl;

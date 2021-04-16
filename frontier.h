@@ -4,6 +4,7 @@
 #include <string>
 #include <deque>
 #include <unordered_set>
+#include <queue>
 
 #include "state.h"
 
@@ -19,11 +20,24 @@ class Frontier {
     virtual string getName() = 0;
 };
 
-
 class FrontierBFS: public Frontier {
   public:
     deque<State*> queue;
     unordered_set<State*, HashHelper, EqualHelper> set;
+
+    void add(State* state);
+    State* pop();
+    bool is_empty();
+    int size();
+    bool contains(State* state);
+    string getName();
+};
+
+class FrontierBestFS: public Frontier {
+  public:
+    deque<State*> queue;
+    unordered_set<State*, HashHelper, EqualHelper> set;
+    priority_queue<State*> pq;
 
     void add(State* state);
     State* pop();

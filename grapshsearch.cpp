@@ -24,8 +24,8 @@ vector<vector<Action>> search(State* initial_state, Frontier &frontier) {
 
 		// Get next node to be explored from the frontier
 		State* state = frontier.pop();
-		//cerr << "New node: " << state << endl;
-		//cerr << state->repr();
+		// cerr << "New node: " << state << endl;
+		// cerr << state->repr();
 
 		iterations += 1;
 		if (iterations % 100 == 0) {

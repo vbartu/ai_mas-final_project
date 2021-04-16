@@ -60,7 +60,8 @@ vector<vector<Action>> split_level(State* initial_state)
 		//cerr << endl;
 		//cerr << state->repr_goal();
 
-		FrontierBFS frontier;
+		// FrontierBFS frontier;
+		FrontierBestFS frontier;
 		vector<vector<Action>> result = search(state, frontier);
 		cerr << "Result " << i << ": " << result.size() << endl;
 

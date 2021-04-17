@@ -29,14 +29,15 @@ vector<vector<Action>> search(State* initial_state, Frontier &frontier) {
 
 		iterations += 1;
 		if (iterations % 100 == 0) {
-			cout << "#" << "Explored: " << explored.size() << endl;
-			cout << "#" << "Frontier: " << frontier.size() << endl;
+			fprintf(stderr, "Explored: %d, Frontier: %d\r", explored.size(),
+				frontier.size());
 		}
 
 
 		// If this state is a goal state, solition is found
 		// Return the path (list of actions) followed to get to this state
 		if (state->is_goal_state()) {
+			cerr << endl;
 			cerr << "Finished!" << endl;
 			return state->extract_plan();
 		}

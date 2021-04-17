@@ -282,13 +282,13 @@ bool State::is_free(int row, int col) {
 }
 
 
-char State::agent_at(int row, int col) {
+char State::agent_at(int row, int col) const {
     for (int agent = 0; agent < this->agent_rows.size(); agent++) {
       if (this->agent_rows[agent] == row && this->agent_cols[agent] == col) {
         return char(agent + int('0'));
       }
     }
-    return false;
+    return 0;
 };
 
 

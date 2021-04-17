@@ -46,7 +46,7 @@ class State {
 
     bool is_free(int row, int col);
 
-    char agent_at(int row, int col);
+    char agent_at(int row, int col) const;
 
     vector<vector<Action>> extract_plan();
 

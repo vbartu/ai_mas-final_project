@@ -7,6 +7,7 @@
 #include <queue>
 
 #include "state.h"
+#include "heuristic.h"
 
 using namespace std;
 
@@ -35,9 +36,8 @@ class FrontierBFS: public Frontier {
 
 class FrontierBestFS: public Frontier {
   public:
-    deque<State*> queue;
     unordered_set<State*, HashHelper, EqualHelper> set;
-    priority_queue<State*> pq;
+    priority_queue<State*, vector<State*>, HeuristicHelper> pq;
 
     void add(State* state);
     State* pop();

@@ -1,4 +1,5 @@
 CC = g++
+LEVEL ?= server/levels/MAPF01.lvl
 
 # C++ compiler option
 #CXXFLAGS = -Wall -O2
@@ -37,13 +38,16 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(OBJ_DIR)
 $(TARGET) : $(OBJECTS)
 	@$(CC) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-.PHONY: clean all run
+.PHONY: clean all run runt
 clean:
 	@rm -rf $(OBJ_DIR) $(TARGET)
 	@echo "Project cleared"
 
 run: all
-	java -jar server/server.jar -c ./main -l server/levels/MAPF01.lvl -g
+	java -jar server/server.jar -c ./main -l $(LEVEL) -g
+
+runt: all
+	java -jar server/server.jar -c ./main -l $(LEVEL)
 
 
 -include $(DEPS)

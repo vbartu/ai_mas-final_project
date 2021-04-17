@@ -3,7 +3,7 @@ LEVEL ?= server/levels/MAPF01.lvl
 
 # C++ compiler option
 #CXXFLAGS = -Wall -O2
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -lpthread
 
 # linker option
 LDFLAGS =

@@ -1,3 +1,0 @@
-Add random shuffle to new generated states
-Fix sets
-Changes vectors for arrays?

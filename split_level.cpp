@@ -1,5 +1,6 @@
 #include <iostream>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "split_level.h"
 #include "frontier.h"
@@ -7,15 +8,40 @@
 
 using namespace std;
 
-static vector<vector<Action>> result2;
+static vector<vector<Action>> global_result;
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
-void* aaa(void* state) {
+typedef struct state_aux_t {
+	State* state;
+	int agent_id;
+} state_aux_t;
+
+void* agent_thread(void* state_aux2) {
+	cerr << "Thread " << ((state_aux_t*)state_aux2)->agent_id << endl;
+	state_aux_t* state_aux = (state_aux_t*) state_aux2;
 	FrontierBestFS frontier;
 
-	vector<vector<Action>> result = search((State*)state, frontier);
+	vector<vector<Action>> result = search(state_aux->state, frontier);
 
-	cerr << "Result: " << result.size() << endl;
-	result2 = result;
+	cerr << "Result thread " << state_aux->agent_id << ": " << result.size() << endl;
+
+	vector<Action> aux;
+	for (int i = 0; i < result.size(); i++) {
+		aux.push_back(result[i][0]);
+	}
+
+	pthread_mutex_lock(&mtx);
+	while (!(global_result.size() > state_aux->agent_id)) {
+		global_result.push_back(vector<Action>(0));
+	}
+	global_result[state_aux->agent_id] = aux;
+	
+	for (int i = result.size(); i < global_result.size(); i++) {
+		global_result[i].push_back(actions[0]);
+	}
+	pthread_mutex_unlock(&mtx);
+
+	free((state_aux_t*)state_aux2);
 	return NULL;
 }
 
@@ -24,9 +50,8 @@ vector<vector<Action>> split_level(State* initial_state)
 	cerr << "Splitted levels:" << endl;
 
 	int number_of_levels = initial_state->agent_rows.size();
-	State* splitted[number_of_levels];
 
-	vector<vector<Action>> global_result;
+	vector<pthread_t> threads;
 
 	for (int i = 0; i < number_of_levels; i++) {
 		vector<int> agent_rows;
@@ -61,7 +86,6 @@ vector<vector<Action>> split_level(State* initial_state)
 
 
 		State* state = new State(boxes, agent_rows, agent_cols, goals);
-		splitted[i] = state;
 		int n_goals = 0;
 		for (auto col : goals) {
 			for (auto goal : col) {
@@ -73,23 +97,28 @@ vector<vector<Action>> split_level(State* initial_state)
 		cerr << "Agent " << i << ", Goals: " << n_goals << endl;
 		cerr << state->repr();
 
+		state_aux_t* state_aux = (state_aux_t*) malloc(sizeof(state_aux_t));
+		state_aux->state = state;
+		state_aux->agent_id = i;
 		pthread_t thread;
-		int err = pthread_create(&thread, NULL, aaa, state);
-		err = pthread_join(thread, NULL);
-
-		for (int j = 0; j < result2.size(); j++) {
-			if (j < global_result.size()) {
-				global_result[j].push_back(result2[j][0]);
-			} else {
-				vector<Action> new_actions(i, actions[0]);
-				global_result.push_back(new_actions);
-				global_result[j].push_back(result2[j][0]);
-			}
-		}
-
-		for (int j = result2.size(); j < global_result.size(); j++) {
-			global_result[j].push_back(actions[0]);
+		int err = pthread_create(&thread, NULL, agent_thread, state_aux);
+		threads.push_back(thread);
+	}
+	cerr << "Joining threads" << endl;
+	for (pthread_t thread : threads) {
+		pthread_join(thread, NULL);
+	}
+	cerr << "Threads joined" << endl;
+	int max_d = 0;
+	for (int i = 0; i < global_result.size(); i++) {
+		if (global_result[i].size() > max_d)
+			max_d = global_result[i].size();
+	}
+	for (int i = 0; i < global_result.size(); i++) {
+		while (global_result[i].size() < max_d) {
+			global_result[i].push_back(actions[0]);
 		}
 	}
+
 	return global_result;
 }

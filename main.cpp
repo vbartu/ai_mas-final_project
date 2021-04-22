@@ -121,13 +121,14 @@ int main () {
 	State* initial_state = new State(boxes, agent_rows, agent_cols);
 
 	vector<vector<Action>> result = split_level(initial_state);
-	cerr << "Final Result length: " << result.size() << endl;
+	cerr << "Final Result length: " << result[0].size() << endl;
 
-	for(int i = 0; i < result.size(); i++) {
+	int n_agents = result.size();
+	for(int i = 0; i < result[0].size(); i++) {
 		string join_action = "";
-		for (int j = 0; j < result[i].size(); j++) {
-			join_action += result[i][j].name;
-			if (j != result[i].size()-1) {
+		for (int j = 0; j < result.size(); j++) {
+			join_action += result[j][i].name;
+			if (j != result.size()-1) {
 				join_action += "|";
 			}
 		}

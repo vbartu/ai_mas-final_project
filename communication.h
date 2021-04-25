@@ -5,6 +5,13 @@
 #include <unordered_map>
 #include <pthread.h>
 
+typedef struct coordinates_t {
+	coordinates_t() : x(-1), y(-1) {}; // empty constructor
+	coordinates_t(int row, int col) : x(row), y(col) {}; // constructor
+	int x;
+	int y;
+} coordinates_t;
+
 using namespace std;
 
 

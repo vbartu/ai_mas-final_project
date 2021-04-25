@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 
-#include "state.h"
+#include "bdi_agent_state.h"
 
 using namespace std;
 
@@ -20,15 +20,15 @@ class Heuristic {
     vector<int> colors_left;
 
     Heuristic();
-    Heuristic(State initial_state);
-    vector<vector<int>> calculate_global_map(State initial_state);
-    vector<array<int,2>> get_neighbours(State &state, vector<vector<int>> &distance_map, int row, int col);
-    void set_adjacent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours);
-    void set_adjacent_for_agent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours, int agent_color);
-    void precompute_map(State &initial_state);
-    int precomputed_distance(State &state);
-    vector<vector<int>> compute_box_to_map(State state, int agent_color, char box, int box_row, int box_col);
-    int agent_to_box(State state);
+    Heuristic(AgentState initial_state);
+    vector<vector<int>> calculate_global_map(AgentState initial_state);
+    vector<array<int,2>> get_neighbours(AgentState &state, vector<vector<int>> &distance_map, int row, int col);
+    void set_adjacent(AgentState &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours);
+    void set_adjacent_for_agent(AgentState &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours, int agent_color);
+    void precompute_map(AgentState &initial_state);
+    int precomputed_distance(AgentState &state);
+    vector<vector<int>> compute_box_to_map(AgentState state, int agent_color, char box, int box_row, int box_col);
+    int agent_to_box(AgentState state);
 };
 
 

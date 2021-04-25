@@ -3,11 +3,14 @@
 
 #include <vector>
 
-#include "state.h"
 #include "action.h"
+#include "communication.h"
 
 using namespace std;
 
-vector<vector<Action>> split_level(State* initial_state);
+vector<vector<Action>> split_level(vector<vector<char>> boxes,
+		vector<vector<char>> goals, vector<int> agent_rows,
+		vector<int> agent_cols, umap_t initial_map, vector<int> box_color,
+		vector<int> agent_colors);
 
 #endif // __SPLIT_LEVEL_H

@@ -42,16 +42,17 @@ class AgentState {
     bool operator==(const AgentState &other) const;
 
     string repr();
+    string repr_goal();
 };
 
-class HashHelper3 {
+class HashHelper {
 	public:
 		int operator()(const AgentState* state) const {
 			return state->hashCode();
 		}
 };
 
-class EqualHelper3 {
+class EqualHelper {
 	public:
 		int operator()(const AgentState* state1, const AgentState* state2) const {
 			return *state1 == *state2;

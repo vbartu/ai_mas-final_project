@@ -148,7 +148,7 @@ bool AgentState::is_goal_state() {
 				return false;
 			} else if ('0' <= goal && goal <= '9'
 					&& goal == (char)(this->agent_id) + '0'
-					&& (this->agent_row != row && this->agent_col != col)) {
+					&& (this->agent_row != row || this->agent_col != col)) {
 				return false;
 			}
 		}
@@ -206,7 +206,33 @@ string AgentState::repr()
         }
         else if (this->agent_row == row && this->agent_col == col)
         {
-          line += (char)(this->agent_id) + '0';
+          line += (char)(this->agent_id + '0');
+        }
+        else
+        {
+          line += " ";
+        }
+      }
+      lines = lines + line + "\n";
+    }
+    return lines;
+};
+
+string AgentState::repr_goal()
+{
+    string lines;
+    for (int row = 0; row < this->boxes.size(); row++)
+    {
+      string line;
+      for (int col = 0; col < this->boxes[row].size(); col++)
+      {
+        if (this->goal[row][col] != ' ')
+        {
+          line += this->goal[row][col];
+        }
+        else if (this->walls[row][col])
+        {
+          line += "+";
         }
         else
         {

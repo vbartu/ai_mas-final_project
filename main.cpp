@@ -5,8 +5,10 @@
 
 #include "color.h"
 #include "graphsearch.h"
-#include "state.h"
+#include "bdi_agent_state.h"
 #include "split_level.h"
+#include "communication.h"
+
 
 using namespace std;
 
@@ -45,8 +47,6 @@ int main () {
 		getline(cin, line);
 	}
 
-
-
 	// Parse level size
 	string initial_state_lines[100] = {};
 	int n_rows = 0;
@@ -66,6 +66,7 @@ int main () {
 	vector<vector<bool>> walls;
 	vector<vector<char>> boxes;
 	vector<vector<char>> goals;
+	umap_t initial_map;
 
 	for (int i= 0; i < n_rows; i++) {
 		vector<bool> n_wall;
@@ -89,14 +90,19 @@ int main () {
 		line = initial_state_lines[i];
 		for (int j = 0; j < line.length(); j++) {
 			char c = line[j];
+			coordinates_t coord;
+			coord.x = i;
+			coord.y = j;
 			if (c == ' ') {
 				continue;
 			} else if (c == '+') {
 				walls[i][j] = true;
 			} else if ('0' <= c && c <= '9') {
+				initial_map[coord] = c;
 				agent_rows.push_back(i);
 				agent_cols.push_back(j);
-			} else {
+			} else if ('A' <= c && c <= 'A') {
+				initial_map[coord] = c;
 				boxes[i][j] = c;
 			}
 		}
@@ -114,13 +120,14 @@ int main () {
 		getline(cin, line);
 	}
 
-	State::agent_colors = agent_colors;
-	State::walls = walls;
-	State::goals = goals;
-	State::box_colors = box_colors;
-	State* initial_state = new State(boxes, agent_rows, agent_cols);
+	AgentState::agent_colors = agent_colors;
+	AgentState::box_colors = box_colors;
+	AgentState::walls = walls;
+	//AgentState::goals = goals;
+	//AgentState* initial_state = new AgentState(boxes, agent_rows, agent_cols);
 
-	vector<vector<Action>> result = split_level(initial_state);
+	vector<vector<Action>> result = split_level(boxes, goals, agent_rows,
+			agent_cols, initial_map, box_colors, agent_colors);
 	cerr << "Final Result length: " << result[0].size() << endl;
 
 	int n_agents = result.size();

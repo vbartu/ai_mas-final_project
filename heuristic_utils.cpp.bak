@@ -2,14 +2,14 @@
 
 using namespace std;
 
-Heuristic::Heuristic(State initial_state) {
+Heuristic::Heuristic(AgentState initial_state) {
   this->max_row = initial_state.goals.size();
   this->max_col = initial_state.goals[0].size();
 
 };
 
 
-vector<vector<int>> Heuristic::calculate_global_map(State initial_state) {
+vector<vector<int>> Heuristic::calculate_global_map(AgentState initial_state) {
   int pos = 0;
   vector<vector<int>> global_map;
   for (int i = 0; i < initial_state.walls.size(); i++) {
@@ -25,7 +25,7 @@ vector<vector<int>> Heuristic::calculate_global_map(State initial_state) {
 }
 
 // // cell in x,y coordinate
-// vector<vector<array<int,2>>> Heuristic::calculate_global_map(State initial_state) {
+// vector<vector<array<int,2>>> Heuristic::calculate_global_map(AgentState initial_state) {
 //   vector<vector<array<int,2>>> global_map;
 //   for (int i = 0; i < initial_state.walls.size(); i++) {
 //     vector<array<int,2>> n_col(initial_state.walls[i].size(), {-1,-1});
@@ -40,7 +40,7 @@ vector<vector<int>> Heuristic::calculate_global_map(State initial_state) {
 // }
 
 
-vector<array<int,2>> Heuristic::get_neighbours(State &state, vector<vector<int>> &distance_map, int row, int col) {
+vector<array<int,2>> Heuristic::get_neighbours(AgentState &state, vector<vector<int>> &distance_map, int row, int col) {
   int row_delta[4] = {-1, 0, 0, 1};
   int col_delta[4] = {0, -1, 1, 0};
   vector<array<int,2>> neighbours;
@@ -56,7 +56,7 @@ vector<array<int,2>> Heuristic::get_neighbours(State &state, vector<vector<int>>
 };
 
 
-void Heuristic::set_adjacent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours) {
+void Heuristic::set_adjacent(AgentState &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours) {
   vector<array<int,2>> new_neighbours;
   while(!neighbours.empty()) {
     int adj_row = neighbours.back()[0];
@@ -83,7 +83,7 @@ void Heuristic::set_adjacent(State &state, vector<vector<int>> &distance_map, in
 };
 
 
-void Heuristic::set_adjacent_for_agent(State &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours, int agent_color) {
+void Heuristic::set_adjacent_for_agent(AgentState &state, vector<vector<int>> &distance_map, int current_dist, vector<array<int,2>> &neighbours, int agent_color) {
   vector<array<int,2>> new_neighbours;
   while(!neighbours.empty()) {
     int adj_row = neighbours.back()[0];
@@ -114,7 +114,7 @@ void Heuristic::set_adjacent_for_agent(State &state, vector<vector<int>> &distan
 };
 
 
-void Heuristic::precompute_map(State &initial_state) {
+void Heuristic::precompute_map(AgentState &initial_state) {
   for(int row = 0; row < this->max_row; row++) {
     for(int col = 0; col < this->max_col; col++) {
       char goal = initial_state.goals[row][col];
@@ -162,7 +162,7 @@ void Heuristic::precompute_map(State &initial_state) {
 }
 
 
-int Heuristic::precomputed_distance(State &state) {
+int Heuristic::precomputed_distance(AgentState &state) {
   int distance = 0;
   for(int row = 0; row < state.boxes.size(); row++) {
     for (int col = 0; col < state.boxes[row].size(); col++) {
@@ -236,7 +236,7 @@ int Heuristic::precomputed_distance(State &state) {
   return distance;
 }
 
-vector<vector<int>> Heuristic::compute_box_to_map(State state, int agent_color, char box, int box_row, int box_col) {
+vector<vector<int>> Heuristic::compute_box_to_map(AgentState state, int agent_color, char box, int box_row, int box_col) {
   if (this->initial_boxes[box].begin()->first[0] == box_row && this->initial_boxes[box].begin()->first[1] == box_col) {
     return this->initial_boxes[box][{box_row, box_col}];
   }
@@ -253,7 +253,7 @@ vector<vector<int>> Heuristic::compute_box_to_map(State state, int agent_color, 
 }
 
 
-int Heuristic::agent_to_box(State state) {
+int Heuristic::agent_to_box(AgentState state) {
   int distance = 0;
   for (int agent = 0; agent < state.agent_rows.size(); agent++) {
     int agent_row = state.agent_rows[agent];

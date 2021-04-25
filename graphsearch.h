@@ -3,10 +3,10 @@
 
 #include <vector>
 
-#include "frontier.h"
-#include "state.h"
-#include "action.h"
+#include "bdi_agent_state.h"
 
-vector<vector<Action>> search(State* initial_state, Frontier &frontier);
+using namespace std;
+
+vector<Action> search(AgentState* initial_state);
 
 #endif // __GRAPHSEARCH_H

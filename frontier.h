@@ -6,44 +6,44 @@
 #include <unordered_set>
 #include <queue>
 
-#include "state.h"
+#include "bdi_agent_state.h"
 #include "heuristic.h"
 
 using namespace std;
 
 class Frontier {
   public:
-    virtual void add(State* state) = 0;
-    virtual State* pop() = 0;
+    virtual void add(AgentState* state) = 0;
+    virtual AgentState* pop() = 0;
     virtual bool is_empty() = 0;
     virtual int size() = 0;
-    virtual bool contains(State* state) = 0;
+    virtual bool contains(AgentState* state) = 0;
     virtual string getName() = 0;
 };
 
 class FrontierBFS: public Frontier {
   public:
-    deque<State*> queue;
-    unordered_set<State*, HashHelper, EqualHelper> set;
+    deque<AgentState*> queue;
+    unordered_set<AgentState*, HashHelper, EqualHelper> set;
 
-    void add(State* state);
-    State* pop();
+    void add(AgentState* state);
+    AgentState* pop();
     bool is_empty();
     int size();
-    bool contains(State* state);
+    bool contains(AgentState* state);
     string getName();
 };
 
 class FrontierBestFS: public Frontier {
   public:
-    unordered_set<State*, HashHelper, EqualHelper> set;
-    priority_queue<State*, vector<State*>, HeuristicHelper> pq;
+    unordered_set<AgentState*, HashHelper, EqualHelper> set;
+    priority_queue<AgentState*, vector<AgentState*>, HeuristicHelper> pq;
 
-    void add(State* state);
-    State* pop();
+    void add(AgentState* state);
+    AgentState* pop();
     bool is_empty();
     int size();
-    bool contains(State* state);
+    bool contains(AgentState* state);
     string getName();
 };
 

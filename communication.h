@@ -5,15 +5,7 @@
 #include <unordered_map>
 #include <pthread.h>
 
-typedef struct coordinates_t {
-	coordinates_t() : x(-1), y(-1) {}; // empty constructor
-	coordinates_t(int row, int col) : x(row), y(col) {}; // constructor
-	int x;
-	int y;
-} coordinates_t;
-
 using namespace std;
-
 
 typedef struct coordinates_t {
 	int x;
@@ -42,7 +34,8 @@ class Communication {
 		vector<umap_t> level_map;
 		static pthread_mutex_t mtx;
 
-		Communication();
+		Communication() {};
+		Communication(umap_t initial_map);
 
 		void update_postion(int time, int old_row, int old_col, int row,
 			int col);

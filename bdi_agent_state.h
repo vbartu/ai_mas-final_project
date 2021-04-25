@@ -42,7 +42,6 @@ class AgentState {
     bool operator==(const AgentState &other) const;
 
     string repr();
-    string repr_goal();
 };
 
 class HashHelper {

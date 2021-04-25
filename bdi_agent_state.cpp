@@ -157,9 +157,7 @@ bool AgentState::is_goal_state() {
 };
 
 bool AgentState::is_free(int row, int col) {
-	return (!this->walls[row][col]
-			&& this->boxes[row][col] == ' '
-			&& (row != this->agent_row || col != this->agent_col));
+	return !this->walls[row][col] && this->boxes[row][col] == ' ';
 }
 
 vector<Action> AgentState::extract_plan() {
@@ -213,17 +211,7 @@ string AgentState::repr()
           line += " ";
         }
       }
-      lines = lines + line + "\n";
-    }
-    return lines;
-};
-
-string AgentState::repr_goal()
-{
-    string lines;
-    for (int row = 0; row < this->boxes.size(); row++)
-    {
-      string line;
+		line += "     ";
       for (int col = 0; col < this->boxes[row].size(); col++)
       {
         if (this->goal[row][col] != ' ')

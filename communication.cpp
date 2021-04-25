@@ -22,14 +22,13 @@ void Communication::update_postion(int time, int old_row, int old_col, int row,
 		this->level_map.push_back(aux);
 	}
 	char obj = this->level_map[time][coordinates_t {old_row, old_col}];
-	//cerr << "obj: " << (int)obj << endl;
 	this->level_map[time].erase(coordinates_t {old_row, old_col});
 	this->level_map[time][coordinates_t {row, col}] = obj;
 
 
 	for (int i = time+1; i < this->level_map.size(); i++) {
-		this->level_map[time].erase(coordinates_t {old_row, old_col});
-		this->level_map[time][coordinates_t {row, col}] = obj;
+		this->level_map[i].erase(coordinates_t {old_row, old_col});
+		this->level_map[i][coordinates_t {row, col}] = obj;
 	}
 	pthread_mutex_unlock(&this->mtx);
 }

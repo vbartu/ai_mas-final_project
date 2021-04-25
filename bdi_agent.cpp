@@ -86,14 +86,14 @@ void BdiAgent::run()
 		}
 		AgentState* state = this->intention_to_state(believes, intention);
 		vector<Action> plan = search(state);
-		while (plan.size()) {
-			Action next_action = plan.back();
-			//cerr << "Next action: " << next_action.name << endl;
+		cerr << "Result: " << plan.size() << endl;
+		for (auto& it : plan) {
+			Action next_action = it;
+			//cerr << "Next action (" << agent_id << "): " << next_action.name << endl;
 			AgentState* next_state = state->apply_action(next_action);
-
 			believes = communication.get_positions(this->time);
+
 			if (!this->is_conflict(next_action)) {
-				plan.pop_back();
 				this->final_plan.push_back(next_action);
 				this->time++;
 				communication.update_postion(this->time,

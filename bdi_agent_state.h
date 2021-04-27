@@ -12,7 +12,6 @@ class AgentState {
 	int agent_id;
 	int agent_row;
 	int agent_col;
-	int agent_color;
     vector<vector<char>> boxes;
     vector<vector<char>> goal;
     static vector<vector<bool>> walls;

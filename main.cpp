@@ -14,6 +14,8 @@ using namespace std;
 
 #define CLIENT_NAME "Final project client"
 
+vector<int> agent_colors(10);
+vector<int> box_colors(26);
 
 int main () {
 	cout << CLIENT_NAME << endl;
@@ -27,8 +29,8 @@ int main () {
 
 	// Parse colors
 
-	vector<int> agent_colors(10);
-	vector<int> box_colors(26);
+	//vector<int> agent_colors(10);
+	//vector<int> box_colors(26);
 
 	getline(cin, line); // #colors
 	getline(cin, line);
@@ -67,6 +69,7 @@ int main () {
 	vector<vector<char>> boxes;
 	vector<vector<char>> goals;
 	umap_t initial_map;
+	umap_t goals_map;
 
 	for (int i= 0; i < n_rows; i++) {
 		vector<bool> n_wall;
@@ -115,6 +118,7 @@ int main () {
 			if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')) {
 				cerr << "Goal " << c << " in " << i << ", " << j << endl;
 				goals[i][j] = c;
+				goals_map[(coordinates_t){i,j}] = c;
 			}
 		}
 		getline(cin, line);
@@ -127,7 +131,7 @@ int main () {
 	//AgentState* initial_state = new AgentState(boxes, agent_rows, agent_cols);
 
 	vector<vector<Action>> result = split_level(boxes, goals, agent_rows,
-			agent_cols, initial_map, box_colors, agent_colors);
+			agent_cols, initial_map, goals_map);
 	cerr << "Final Result length: " << result[0].size() << endl;
 
 	int n_agents = result.size();

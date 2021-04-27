@@ -59,11 +59,10 @@ bool AgentState::is_applicable(Action action) {
 
       // Check if there is a box in the given direction,
       // and if the box belongs to this agent (same color)
-      if (box == ' ') {
+      if (!is_box(box)) {
         return false;
       }
-      int box_color = this->box_colors[int(box) - int('A')];
-      if (box_color != this->agent_color) {
+      if (get_color(box) != get_color(this->agent_id)) {
         return false;
       }
       // Check if the future box cell is occupied
@@ -80,11 +79,10 @@ bool AgentState::is_applicable(Action action) {
 
       // Check if there is a box in the given direction,
       // and if the box belongs to this agent (same color)
-      if (box == ' ') {
+      if (!is_box(box)) {
         return false;
       }
-      int box_color = this->box_colors[int(box) - int('A')];
-      if (box_color != this->agent_color) {
+      if (get_color(box) != get_color(this->agent_id)) {
         return false;
       }
       // Check if the future box cell is occupied

@@ -11,7 +11,7 @@ using namespace std;
 
 vector<Action> search(AgentState* initial_state) {
 	int iterations = 0;
-	FrontierBestFS frontier;
+	FrontierBFS frontier;
 	frontier.add(initial_state);
 	unordered_set<AgentState*, HashHelper, EqualHelper> explored;
 
@@ -19,6 +19,7 @@ vector<Action> search(AgentState* initial_state) {
 		// TODO: Return error is frontier is empty
 		if(frontier.size() == 0) {
 			vector<Action> action_vector;
+			cerr << "Frontier empty error" << endl;
 			return action_vector;
 		}
 

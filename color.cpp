@@ -1,4 +1,5 @@
 #include "color.h"
+#include "main.h"
 
 int get_color_value(string color)
 {
@@ -24,4 +25,24 @@ int get_color_value(string color)
 		return BROWN;
 	}
 	return -1;
+}
+
+int get_color(char object)
+{
+	if (object >= 0 && object <= 9) {
+		return agent_colors[object];
+	} else if (object >= '0' && object <= '9') {
+		return agent_colors[object - '0'];
+	} else if (object >= 'A' && object <= 'Z') {
+		return box_colors[object - 'A'];
+	} else {
+		return -1;
+	}
+}
+
+bool is_box(char object) {
+	if (object >= 'A' && object <= 'Z') {
+		return true;
+	}
+	return false;
 }

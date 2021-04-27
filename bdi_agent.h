@@ -8,12 +8,21 @@
 
 using namespace std;
 
+
+typedef enum goal_type_t {
+	NO_GOAL,           // There is no goals for this agent
+	FIND_BOX,          // Move agent to box
+	CARRY_BOX_TO_GOAL, // If agent is next to box, move box to goal
+	AGENT_GOAL,        // If agent has goal, move agent to goal
+} goal_type_t;
+
+
 typedef struct goal_t {
-	//goal_t() : type(-1), row(-1), col(-1) {}; // empty constructor
-	int type; // 0 is for going to a box, 1 for carrying that box to its goal, 2 for going to agent goal,
+	goal_type_t type;
 	int row;
 	int col;
 } goal_t;
+
 
 class BdiAgent {
 	public:
@@ -21,8 +30,6 @@ class BdiAgent {
 		static Communication communication;
 		static vector<vector<char>> goals;
 		static umap_t goals_map;
-		static vector<int> box_color;
-		static vector<int> agent_color;
 
 		int agent_id;
 		int time;
@@ -35,6 +42,8 @@ class BdiAgent {
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
 
 		bool is_conflict(Action action);
+
+		void update_action(Action action, AgentState* state);
 
 		void run();
 

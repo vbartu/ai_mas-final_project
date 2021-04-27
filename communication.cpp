@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <stdio.h>
 
 #include "communication.h"
 
@@ -30,6 +31,11 @@ void Communication::update_postion(int time, int old_row, int old_col, int row,
 		this->level_map[i].erase(coordinates_t {old_row, old_col});
 		this->level_map[i][coordinates_t {row, col}] = obj;
 	}
+
+	for (auto& it : level_map[time+1]) {
+		printf("Map up: %d %d %d\n", it.first.x, it.first.y, it.second);
+	}
+		
 	pthread_mutex_unlock(&this->mtx);
 }
 

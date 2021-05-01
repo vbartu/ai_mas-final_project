@@ -35,7 +35,21 @@ vector<AgentState*> AgentState::get_expanded_states() {
 	for (int act = 0; act < actions.size(); act++) {
 		Action action = actions[act];
 		if (this->is_applicable(action)) {
-			expanded_states.push_back(this->apply_action(action));
+			AgentState* state = this->apply_action(action);
+
+			bool error = false;
+			for (int row = 0; row < state->boxes.size(); row++) {
+				for (int col = 0; col < state->boxes[row].size(); col++) {
+					char box = state->boxes[row][col];
+					if (box != ' ' && state->walls[row][col]) {
+						error = true;
+						break;
+					}
+				}
+			}
+
+			if (!error)
+				expanded_states.push_back(state);
 		}
 	}
 	return expanded_states;
@@ -161,7 +175,7 @@ bool AgentState::is_free(int row, int col) {
 vector<Action> AgentState::extract_plan() {
     vector<Action> plan(this->g);
     AgentState* state = this;
-    while (state->parent != nullptr) {
+    while (state->g != 0) {
 		plan[state->g - 1] = state->action;
 		state = state->parent;
     }

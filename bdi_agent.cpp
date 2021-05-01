@@ -115,6 +115,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	for (auto& it : believes) {
 		coordinates_t c = it.first;
 		char obj = believes[c];
+		//cerr << "Object: " << obj << endl;
 		if (obj - '0' == this->agent_id) {
 			agent_row = c.x;
 			agent_col = c.y;
@@ -150,16 +151,16 @@ void BdiAgent::update_action(Action action, AgentState* state) {
 			state->agent_col, next_agent_row, next_agent_col);
 
 	} else if (action.type == ActionType::PUSH) {
-		int next_agent_row = state->agent_row + action.ard;
-		int next_agent_col = state->agent_col + action.acd;
-		this->communication.update_postion(this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col);
 		int box_row = state->agent_row + action.ard;
 		int box_col = state->agent_col + action.acd;
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
 		this->communication.update_postion(this->time, box_row, box_col,
 			box_dst_row, box_dst_col);
+		int next_agent_row = state->agent_row + action.ard;
+		int next_agent_col = state->agent_col + action.acd;
+		this->communication.update_postion(this->time, state->agent_row,
+			state->agent_col, next_agent_row, next_agent_col);
 
 	} else if (action.type == ActionType::PULL) {
 		int next_agent_row = state->agent_row + action.ard;
@@ -197,19 +198,13 @@ void BdiAgent::run()
 
 		for (Action next_action : plan) {
 			cerr << "Next action (" << agent_id << "): " << next_action.name << endl;
-			//believes = communication.get_positions(this->time);
-
 			if (!this->is_conflict(next_action)) {
 				this->final_plan.push_back(next_action);
-				this->time++;
 				update_action(next_action, state);
-				//delete(state);
+				this->time++;
 				state = state->apply_action(next_action);
-				state->repr();
+				//cerr << state->repr();
 			}
 		}
-		//assert(0);
-		if (intention.type == CARRY_BOX_TO_GOAL)
-			return;
 	}
 }

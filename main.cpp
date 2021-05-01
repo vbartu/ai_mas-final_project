@@ -104,7 +104,7 @@ int main () {
 				initial_map[coord] = c;
 				agent_rows.push_back(i);
 				agent_cols.push_back(j);
-			} else if ('A' <= c && c <= 'A') {
+			} else if ('A' <= c && c <= 'Z') {
 				initial_map[coord] = c;
 				boxes[i][j] = c;
 			}

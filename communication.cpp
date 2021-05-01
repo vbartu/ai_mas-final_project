@@ -17,13 +17,13 @@ Communication::Communication(umap_t intial_map)
 void Communication::update_postion(int time, int old_row, int old_col, int row,
 	int col)
 {
-	pthread_mutex_lock(&this->mtx);
+	assert(!pthread_mutex_lock(&this->mtx));
 	while (this->level_map.size() <= time) {
 		umap_t aux= this->level_map.back();
 		this->level_map.push_back(aux);
 	}
-	char obj = this->level_map[time][coordinates_t {old_row, old_col}];
-	this->level_map[time].erase(coordinates_t {old_row, old_col});
+	char obj = this->level_map[time][(coordinates_t){old_row, old_col}];
+	this->level_map[time].erase((coordinates_t){old_row, old_col});
 	this->level_map[time][coordinates_t {row, col}] = obj;
 
 
@@ -31,22 +31,17 @@ void Communication::update_postion(int time, int old_row, int old_col, int row,
 		this->level_map[i].erase(coordinates_t {old_row, old_col});
 		this->level_map[i][coordinates_t {row, col}] = obj;
 	}
-
-	for (auto& it : level_map[time+1]) {
-		printf("Map up: %d %d %d\n", it.first.x, it.first.y, it.second);
-	}
-		
-	pthread_mutex_unlock(&this->mtx);
+	assert(!pthread_mutex_unlock(&this->mtx));
 }
 
 umap_t Communication::get_positions(int time)
 {
-	pthread_mutex_lock(&this->mtx);
+	assert(!pthread_mutex_lock(&this->mtx));
 	while (!(time < this->level_map.size())) {
 		umap_t aux = this->level_map.back();
 		this->level_map.push_back(aux);
 	}
 	umap_t aux = this->level_map[time];
-	pthread_mutex_unlock(&this->mtx);
+	assert(!pthread_mutex_unlock(&this->mtx));
 	return aux;
 }

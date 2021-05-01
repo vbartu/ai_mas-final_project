@@ -27,9 +27,8 @@ vector<Action> search(AgentState* initial_state) {
 		AgentState* state = frontier.pop();
 
 		iterations += 1;
-		if (iterations % 100 == 0) {
-			fprintf(stderr, "Explored: %d, Frontier: %d\r", explored.size(),
-				frontier.size());
+		if (iterations % 10000 == 0) {
+			//fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
 		}
 
 

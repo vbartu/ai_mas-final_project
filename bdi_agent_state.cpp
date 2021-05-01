@@ -49,7 +49,7 @@ vector<AgentState*> AgentState::get_expanded_states() {
 			}
 
 			//if (!error)
-			if (true)
+			if (true) //TODO:
 				expanded_states.push_back(state);
 		}
 	}

@@ -16,6 +16,7 @@ using namespace std;
 
 vector<int> agent_colors(10);
 vector<int> box_colors(26);
+vector<vector<bool>> walls;
 
 int main () {
 	cout << CLIENT_NAME << endl;
@@ -65,7 +66,6 @@ int main () {
 
 
 	// Parse initial state
-	vector<vector<bool>> walls;
 	vector<vector<char>> boxes;
 	vector<vector<char>> goals;
 	umap_t initial_map;

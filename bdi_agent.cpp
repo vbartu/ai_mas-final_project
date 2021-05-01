@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 
+#include "main.h"
 #include "bdi_agent.h"
 #include "action.h"
 #include "graphsearch.h"
@@ -95,11 +96,17 @@ goal_t BdiAgent::get_next_goal(umap_t believes) {
 
 		for (auto box_it : believes) {
 			if (box_it.second == goal_obj) {
-				return (goal_t) {
-					FIND_BOX,
-					box_it.first.x,
-					box_it.first.y
-				};
+				for (int i = 0; i < 4; i++) {
+					int adj_row = box_it.first.x + row_delta[i];
+					int adj_col = box_it.first.y + col_delta[i];
+					if (!walls[adj_row][adj_col]) {
+						return (goal_t) {
+							FIND_BOX,
+							adj_row,
+							adj_col,
+						};
+					}
+				}
 			}
 		}
 	}
@@ -112,6 +119,8 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	int n_rows = this->goals.size(), n_cols = this->goals[0].size();
 	int agent_row, agent_col;
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
+	vector<vector<char>> goal(n_rows, vector<char>(n_cols, ' '));
+
 	for (auto& it : believes) {
 		coordinates_t c = it.first;
 		char obj = believes[c];
@@ -121,10 +130,12 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 			agent_col = c.y;
 		} else {
 			boxes[c.x][c.y] = obj;
+			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
+				goal[it.first.x][it.first.y] = obj;
+			}
 		}
 	}
 
-	vector<vector<char>> goal(n_rows, vector<char>(n_cols, ' '));
 	if (intention.type == AGENT_GOAL) {
 		goal[intention.row][intention.col] = (char)(this->agent_id) + '0';
 	} else if (intention.type == CARRY_BOX_TO_GOAL) {

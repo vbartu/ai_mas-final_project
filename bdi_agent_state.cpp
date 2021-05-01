@@ -48,7 +48,8 @@ vector<AgentState*> AgentState::get_expanded_states() {
 				}
 			}
 
-			if (!error)
+			//if (!error)
+			if (true)
 				expanded_states.push_back(state);
 		}
 	}
@@ -131,8 +132,8 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
 		// Box current and future position
-		int box_row = this->agent_row - action.ard;
-		int box_col = this->agent_col - action.acd;
+		int box_row = this->agent_row - action.brd;
+		int box_col = this->agent_col - action.bcd;
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
 		// Copy box to new cell, the delete it from the old one
@@ -201,6 +202,9 @@ int AgentState::hashCode() const {
 string AgentState::repr()
 {
     string lines;
+	lines += "State: ";
+	lines += this->action.name;
+	lines += "\n";
     for (int row = 0; row < this->boxes.size(); row++)
     {
       string line;
@@ -239,6 +243,10 @@ string AgentState::repr()
           line += " ";
         }
       }
+	  if (row == 0) {
+		line += "     ";
+		line += to_string(this->g);
+	  }
       lines = lines + line + "\n";
     }
     return lines;

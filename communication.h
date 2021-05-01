@@ -41,6 +41,8 @@ class Communication {
 			int col);
 
 		umap_t get_positions(int time);
+
+		bool conflict(int time, int row, int col); 
 };
 
 #endif // __COMMUNICATION_H

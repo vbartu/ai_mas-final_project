@@ -41,7 +41,7 @@ class BdiAgent {
 
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
 
-		bool is_conflict(Action action);
+		bool is_conflict(Action action, AgentState* state);
 
 		void update_action(Action action, AgentState* state);
 

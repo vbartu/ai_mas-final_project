@@ -14,6 +14,13 @@ Communication::Communication(umap_t intial_map)
 	this->level_map.push_back(intial_map);
 }
 
+bool Communication::conflict(int time, int row, int col)
+{
+		pthread_mutex_lock(&this->mtx);
+		pthread_mutex_unlock(&this->mtx);
+		return this->level_map[time][coordinates_t{row,col}] != ' ';
+}
+
 void Communication::update_postion(int time, int old_row, int old_col, int row,
 	int col)
 {

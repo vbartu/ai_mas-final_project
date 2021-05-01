@@ -149,8 +149,31 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
 }
 
-bool BdiAgent::is_conflict(Action action)
+bool BdiAgent::is_conflict(Action action, AgentState* state )
 {
+	if (action.type == ActionType::NOOP) {
+		return false;
+	}
+	else if (action.type == ActionType::MOVE) {
+		int dest_row = state->agent_row + action.ard;
+		int dest_col = state->agent_col + action.acd;
+		// WHY LEVEL_MAP IS A VECTOR ?
+		return this->communication.conflict(this->time, dest_row, dest_col);
+	}
+	else if (action.type == ActionType::PUSH) {
+		// int dest_ag_row = this->state.agent_row + action.ard;
+		// int dest_ag_col = this->state.agent_col + action.acd;
+		int dest_box_row = state->agent_row + action.ard + action.brd;
+		int dest_box_col = state->agent_col + action.ard + action.bcd;
+		return this->communication.conflict(this->time, dest_box_row, dest_box_col);
+	}
+	else if (action.type == ActionType::PULL) {
+		int dest_ag_row = state->agent_row + action.ard;
+		int dest_ag_col = state->agent_col + action.acd;
+		// int dest_box_row = this->state.agent_row;
+		// int dest_box_col = this->state.agent_col;
+		return this->communication.conflict(this->time, dest_ag_row, dest_ag_col);
+	}
 	return false;
 }
 
@@ -185,8 +208,8 @@ void BdiAgent::update_action(Action action, AgentState* state) {
 		this->communication.update_postion(this->time, box_row, box_col,
 			box_dst_row, box_dst_col);
 	}
-
 }
+
 
 void BdiAgent::run()
 {
@@ -209,12 +232,17 @@ void BdiAgent::run()
 
 		for (Action next_action : plan) {
 			cerr << "Next action (" << agent_id << "): " << next_action.name << endl;
-			if (!this->is_conflict(next_action)) {
+
+			if (!this->is_conflict(next_action, state)) {
 				this->final_plan.push_back(next_action);
 				update_action(next_action, state);
 				this->time++;
 				state = state->apply_action(next_action);
 				//cerr << state->repr();
+			}
+			else {
+				this->final_plan.push_back(actions[0]);
+				this->time++;
 			}
 		}
 	}

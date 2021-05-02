@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "action.h"
-#include "communication.h"
+#include "world.h"
 
 using namespace std;
 

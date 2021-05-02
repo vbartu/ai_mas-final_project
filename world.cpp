@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "communication.h"
+#include "world.h"
 #include "main.h"
 
 using namespace std;

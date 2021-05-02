@@ -7,7 +7,7 @@
 #include "graphsearch.h"
 #include "bdi_agent_state.h"
 #include "split_level.h"
-#include "communication.h"
+#include "world.h"
 
 
 using namespace std;

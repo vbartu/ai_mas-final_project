@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "communication.h"
+#include "world.h"
 #include "bdi_agent_state.h"
 
 using namespace std;

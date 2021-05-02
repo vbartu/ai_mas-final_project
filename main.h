@@ -5,6 +5,9 @@
 
 using namespace std;
 
+extern int n_agents;
+extern int n_rows;
+extern int n_cols;
 extern vector<int> agent_colors;
 extern vector<int> box_colors;
 extern vector<vector<bool>> walls;

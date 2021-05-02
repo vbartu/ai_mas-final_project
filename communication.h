@@ -1,9 +1,13 @@
 #ifndef __COMMUNICATION_H
 #define __COMMUNICATION_H
 
+#include <string>
 #include <vector>
 #include <unordered_map>
 #include <pthread.h>
+
+#include "action.h"
+#include "bdi_agent_state.h"
 
 using namespace std;
 
@@ -11,6 +15,9 @@ typedef struct coordinates_t {
 	int x;
 	int y;
 } coordinates_t;
+
+coordinates_t add(coordinates_t a, coordinates_t b);
+coordinates_t sub(coordinates_t a, coordinates_t b);
 
 
 class MapHashHelper {
@@ -38,14 +45,16 @@ class World {
 		World() {};
 		World(umap_t initial_map, int number_agents);
 
-		void update_postion(int agent_id, int time, int curr_row, int curr_col,
-			int next_row, int next_col, bool last);
+		bool update_position(int agent_id, int time, Action action,
+			AgentState* state);
 
 		void finished(int agent_id);
 
 		umap_t get_positions(int time);
 
-		bool conflict(int time, int row, int col); 
+		bool is_conflict(int time, coordinates_t next_pos);
+
+		string repr();
 };
 
 #endif // __COMMUNICATION_H

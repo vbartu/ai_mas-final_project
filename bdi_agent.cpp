@@ -10,6 +10,9 @@
 
 using namespace std;
 
+
+static umap_t world2;
+
 World BdiAgent::world;
 vector<vector<char>> BdiAgent::goals;
 umap_t BdiAgent::goals_map;
@@ -125,7 +128,6 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	for (auto& it : believes) {
 		coordinates_t c = it.first;
 		char obj = believes[c];
-		//cerr << "Object: " << obj << endl;
 		if (obj - '0' == this->agent_id) {
 			agent_row = c.x;
 			agent_col = c.y;
@@ -150,62 +152,49 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
 }
 
-bool BdiAgent::is_conflict(Action action, AgentState* state)
-{
-	if (action.type == ActionType::NOOP) {
-		return false;
-	}
-	else if (action.type == ActionType::MOVE) {
-		int dest_row = state->agent_row + action.ard;
-		int dest_col = state->agent_col + action.acd;
-		return this->world.conflict(this->time+1, dest_row, dest_col);
-	}
-	else if (action.type == ActionType::PUSH) {
-		int dest_box_row = state->agent_row + action.ard + action.brd;
-		int dest_box_col = state->agent_col + action.acd + action.bcd;
-		return this->world.conflict(this->time+1, dest_box_row, dest_box_col);
-	}
-	else if (action.type == ActionType::PULL) {
-		int dest_ag_row = state->agent_row + action.ard;
-		int dest_ag_col = state->agent_col + action.acd;
-		return this->world.conflict(this->time+1, dest_ag_row, dest_ag_col);
-	}
-	return false;
-}
-
-void BdiAgent::update_action(Action action, AgentState* state)
-{
-	if (action.type == ActionType::MOVE) {
-		int next_agent_row = state->agent_row + action.ard;
-		int next_agent_col = state->agent_col + action.acd;
-		this->world.update_postion(this->agent_id, this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col, true);
-
-	} else if (action.type == ActionType::PUSH) {
-		int box_row = state->agent_row + action.ard;
-		int box_col = state->agent_col + action.acd;
-		int box_dst_row = box_row + action.brd;
-		int box_dst_col = box_col + action.bcd;
-		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
-			box_dst_row, box_dst_col, false);
-		int next_agent_row = state->agent_row + action.ard;
-		int next_agent_col = state->agent_col + action.acd;
-		this->world.update_postion(this->agent_id, this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col, true);
-
-	} else if (action.type == ActionType::PULL) {
-		int next_agent_row = state->agent_row + action.ard;
-		int next_agent_col = state->agent_col + action.acd;
-		this->world.update_postion(this->agent_id, this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col, false);
-		int box_row = state->agent_row - action.brd;
-		int box_col = state->agent_col - action.bcd;
-		int box_dst_row = box_row + action.brd;
-		int box_dst_col = box_col + action.bcd;
-		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
-			box_dst_row, box_dst_col, true);
-	}
-}
+//bool BdiAgent::update_action(Action action, AgentState* state)
+//{
+//	coordinates_t agent_pos = {state->
+//	if (action.type == ActionType::MOVE) {
+//		int next_agent_row = state->agent_row + action.ard;
+//		int next_agent_col = state->agent_col + action.acd;
+//		return this->world.update_postion(this->agent_id, this->time,
+//			state->agent_row, state->agent_col, next_agent_row, next_agent_col,
+//			true);
+//
+//	} else if (action.type == ActionType::PUSH) {
+//		int box_row = state->agent_row + action.ard;
+//		int box_col = state->agent_col + action.acd;
+//		int box_dst_row = box_row + action.brd;
+//		int box_dst_col = box_col + action.bcd;
+//		if (!this->world.update_postion(this->agent_id, this->time, box_row,
+//				box_col, box_dst_row, box_dst_col, false)) {
+//			return false;
+//		}
+//		int next_agent_row = state->agent_row + action.ard;
+//		int next_agent_col = state->agent_col + action.acd;
+//		this->world.update_postion(this->agent_id, this->time, state->agent_row,
+//			state->agent_col, next_agent_row, next_agent_col, true);
+//		return true;
+//
+//	} else if (action.type == ActionType::PULL) {
+//		int next_agent_row = state->agent_row + action.ard;
+//		int next_agent_col = state->agent_col + action.acd;
+//		if (!this->world.update_postion(this->agent_id, this->time,
+//				state->agent_row, state->agent_col, next_agent_row,
+//				next_agent_col, false)) {
+//			return false;
+//		}
+//		int box_row = state->agent_row - action.brd;
+//		int box_col = state->agent_col - action.bcd;
+//		int box_dst_row = box_row + action.brd;
+//		int box_dst_col = box_col + action.bcd;
+//		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
+//			box_dst_row, box_dst_col, true);
+//		return true;
+//	}
+//	return true;
+//}
 
 
 void BdiAgent::run()
@@ -231,18 +220,17 @@ void BdiAgent::run()
 			fprintf(stderr, "Next %d action(%d): %s\n", agent_id, time,
 				next_action.name.c_str());
 
-			//if (!this->is_conflict(next_action, state)) {
-			if (true) {
-				this->time++;
+			this->time++;
+			if (world.update_position(agent_id, time, next_action, state)) {
 				i++;
-				update_action(next_action, state);
 				this->final_plan.push_back(next_action);
 				state = state->apply_action(next_action);
+				cerr << state->repr();
 			}
 			else {
 				cerr << "Conflict!!!" << endl;
+				//assert(0);
 				this->final_plan.push_back(actions[0]);
-				this->time++;
 			}
 		}
 	}

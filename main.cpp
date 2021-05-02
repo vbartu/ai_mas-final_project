@@ -17,6 +17,9 @@ using namespace std;
 vector<int> agent_colors(10);
 vector<int> box_colors(26);
 vector<vector<bool>> walls;
+int n_agents;
+int n_rows;
+int n_cols;
 
 int main () {
 	cout << CLIENT_NAME << endl;
@@ -52,8 +55,8 @@ int main () {
 
 	// Parse level size
 	string initial_state_lines[100] = {};
-	int n_rows = 0;
-	int n_cols = 0;
+	n_rows = 0;
+	n_cols = 0;
 
 	getline(cin, line);
 	while (line[0] != '#') {
@@ -110,6 +113,8 @@ int main () {
 			}
 		}
 	}
+
+	n_agents = agent_rows.size();
 
 	getline(cin, line);
 	for (int i = 0; line[0] != '#'; i++) {

@@ -6,7 +6,7 @@ LEVEL ?= server/levels/MAPF01.lvl
 CXXFLAGS = -O3 -lpthread
 
 # linker option
-LDFLAGS =
+LDFLAGS = -lpthread
 
 # src file dir
 SRC_DIR = ${CURDIR}

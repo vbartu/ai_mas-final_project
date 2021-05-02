@@ -29,16 +29,19 @@ class MapEqualHelper {
 
 typedef unordered_map<coordinates_t, char, MapHashHelper, MapEqualHelper> umap_t;
 
-class Communication {
+class World {
 	public:
+		int current_time;
+		vector<int> agent_times;
 		vector<umap_t> level_map;
-		static pthread_mutex_t mtx;
 
-		Communication() {};
-		Communication(umap_t initial_map);
+		World() {};
+		World(umap_t initial_map, int number_agents);
 
-		void update_postion(int time, int old_row, int old_col, int row,
-			int col);
+		void update_postion(int agent_id, int time, int curr_row, int curr_col,
+			int next_row, int next_col, bool last);
+
+		void finished(int agent_id);
 
 		umap_t get_positions(int time);
 

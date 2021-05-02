@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <stdio.h>
 
 #include "main.h"
 #include "bdi_agent.h"
@@ -9,7 +10,7 @@
 
 using namespace std;
 
-Communication BdiAgent::communication;
+World BdiAgent::world;
 vector<vector<char>> BdiAgent::goals;
 umap_t BdiAgent::goals_map;
 
@@ -128,7 +129,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 		if (obj - '0' == this->agent_id) {
 			agent_row = c.x;
 			agent_col = c.y;
-		} else {
+		} else if (is_box(obj) && get_color(this->agent_id == get_color(obj))) {
 			boxes[c.x][c.y] = obj;
 			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
 				goal[it.first.x][it.first.y] = obj;
@@ -149,7 +150,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
 }
 
-bool BdiAgent::is_conflict(Action action, AgentState* state )
+bool BdiAgent::is_conflict(Action action, AgentState* state)
 {
 	if (action.type == ActionType::NOOP) {
 		return false;
@@ -157,56 +158,52 @@ bool BdiAgent::is_conflict(Action action, AgentState* state )
 	else if (action.type == ActionType::MOVE) {
 		int dest_row = state->agent_row + action.ard;
 		int dest_col = state->agent_col + action.acd;
-		// WHY LEVEL_MAP IS A VECTOR ?
-		return this->communication.conflict(this->time, dest_row, dest_col);
+		return this->world.conflict(this->time+1, dest_row, dest_col);
 	}
 	else if (action.type == ActionType::PUSH) {
-		// int dest_ag_row = this->state.agent_row + action.ard;
-		// int dest_ag_col = this->state.agent_col + action.acd;
 		int dest_box_row = state->agent_row + action.ard + action.brd;
-		int dest_box_col = state->agent_col + action.ard + action.bcd;
-		return this->communication.conflict(this->time, dest_box_row, dest_box_col);
+		int dest_box_col = state->agent_col + action.acd + action.bcd;
+		return this->world.conflict(this->time+1, dest_box_row, dest_box_col);
 	}
 	else if (action.type == ActionType::PULL) {
 		int dest_ag_row = state->agent_row + action.ard;
 		int dest_ag_col = state->agent_col + action.acd;
-		// int dest_box_row = this->state.agent_row;
-		// int dest_box_col = this->state.agent_col;
-		return this->communication.conflict(this->time, dest_ag_row, dest_ag_col);
+		return this->world.conflict(this->time+1, dest_ag_row, dest_ag_col);
 	}
 	return false;
 }
 
-void BdiAgent::update_action(Action action, AgentState* state) {
+void BdiAgent::update_action(Action action, AgentState* state)
+{
 	if (action.type == ActionType::MOVE) {
 		int next_agent_row = state->agent_row + action.ard;
 		int next_agent_col = state->agent_col + action.acd;
-		this->communication.update_postion(this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col);
+		this->world.update_postion(this->agent_id, this->time, state->agent_row,
+			state->agent_col, next_agent_row, next_agent_col, true);
 
 	} else if (action.type == ActionType::PUSH) {
 		int box_row = state->agent_row + action.ard;
 		int box_col = state->agent_col + action.acd;
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
-		this->communication.update_postion(this->time, box_row, box_col,
-			box_dst_row, box_dst_col);
+		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
+			box_dst_row, box_dst_col, false);
 		int next_agent_row = state->agent_row + action.ard;
 		int next_agent_col = state->agent_col + action.acd;
-		this->communication.update_postion(this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col);
+		this->world.update_postion(this->agent_id, this->time, state->agent_row,
+			state->agent_col, next_agent_row, next_agent_col, true);
 
 	} else if (action.type == ActionType::PULL) {
 		int next_agent_row = state->agent_row + action.ard;
 		int next_agent_col = state->agent_col + action.acd;
-		this->communication.update_postion(this->time, state->agent_row,
-			state->agent_col, next_agent_row, next_agent_col);
+		this->world.update_postion(this->agent_id, this->time, state->agent_row,
+			state->agent_col, next_agent_row, next_agent_col, false);
 		int box_row = state->agent_row - action.brd;
 		int box_col = state->agent_col - action.bcd;
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
-		this->communication.update_postion(this->time, box_row, box_col,
-			box_dst_row, box_dst_col);
+		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
+			box_dst_row, box_dst_col, true);
 	}
 }
 
@@ -217,11 +214,11 @@ void BdiAgent::run()
 	goal_t intention;
 
 	while (true) {
-		believes = this->communication.get_positions(this->time);
+		believes = this->world.get_positions(this->time);
 		intention = this->get_next_goal(believes);
 		cerr << "Next goal " << intention.type << " " << intention.row << " " << intention.col << endl;
 		if (intention.type == NO_GOAL) {
-			cerr << "Agent " << this->agent_id << " finished" << endl;
+			this->world.finished(this->agent_id);
 			return;
 		}
 
@@ -229,18 +226,21 @@ void BdiAgent::run()
 		cerr << state->repr();
 		vector<Action> plan = search(state);
 		cerr << "Plan result size: " << plan.size() << endl;
+		for (int i = 0; i < plan.size();) {
+			Action next_action = plan[i];
+			fprintf(stderr, "Next %d action(%d): %s\n", agent_id, time,
+				next_action.name.c_str());
 
-		for (Action next_action : plan) {
-			cerr << "Next action (" << agent_id << "): " << next_action.name << endl;
-
-			if (!this->is_conflict(next_action, state)) {
-				this->final_plan.push_back(next_action);
-				update_action(next_action, state);
+			//if (!this->is_conflict(next_action, state)) {
+			if (true) {
 				this->time++;
+				i++;
+				update_action(next_action, state);
+				this->final_plan.push_back(next_action);
 				state = state->apply_action(next_action);
-				//cerr << state->repr();
 			}
 			else {
+				cerr << "Conflict!!!" << endl;
 				this->final_plan.push_back(actions[0]);
 				this->time++;
 			}

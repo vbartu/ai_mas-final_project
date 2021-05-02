@@ -27,7 +27,7 @@ typedef struct goal_t {
 class BdiAgent {
 	public:
 		// static map<char, coordinates_t> goals;
-		static Communication communication;
+		static World world;
 		static vector<vector<char>> goals;
 		static umap_t goals_map;
 

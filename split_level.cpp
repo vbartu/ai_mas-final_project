@@ -41,13 +41,14 @@ vector<vector<Action>> split_level(vector<vector<char>> boxes,
 
 	cerr << "Initial map: " << initial_map.size() << endl;
 
-	Communication communication(initial_map);
-	BdiAgent::communication = communication;
+	int number_of_levels = agent_rows.size();
+	cerr << "Splitted levels(" << number_of_levels << ")" << endl;
+
+	World world(initial_map, number_of_levels);
+	BdiAgent::world = world;
 	BdiAgent::goals = goals;
 	BdiAgent::goals_map = goals_map;
 
-	int number_of_levels = agent_rows.size();
-	cerr << "Splitted levels(" << number_of_levels << ")" << endl;
 
 	vector<pthread_t> threads;
 

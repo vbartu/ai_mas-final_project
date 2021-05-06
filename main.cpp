@@ -1,29 +1,83 @@
 #include <iostream>
-#include <cstdio>
 #include <string>
 #include <vector>
+#include <pthread.h>
 
+#include "global.h"
 #include "color.h"
-#include "graphsearch.h"
-#include "bdi_agent_state.h"
-#include "split_level.h"
-#include "world.h"
-
+#include "action.h"
+#include "bdi_agent.h"
 
 using namespace std;
 
 #define CLIENT_NAME "Final project client"
 
-vector<int> agent_colors(10);
-vector<int> box_colors(26);
-vector<vector<bool>> walls;
-int n_agents;
-int n_rows;
-int n_cols;
+/** Global variables */
+static vector<vector<Action>> global_result;
+static pthread_mutex_t global_result_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+/** Function prototypes */
+static void* agent_thread(void* args);
+static void split_level(umap_t initial_map);
+
+/** Function definitions */
+static void* agent_thread(void* args) {
+	int agent_id = *((int*)args);
+	BdiAgent agent = BdiAgent(agent_id);
+	agent.run();
+
+	pthread_mutex_lock(&global_result_mtx);
+	while (global_result.size() <= agent_id) {
+		global_result.push_back(vector<Action>(0));
+	}
+	global_result[agent_id] = agent.final_plan;
+	
+	for (int i = agent.final_plan.size(); i < global_result.size(); i++) {
+		global_result[i].push_back(actions[0]);
+	}
+	pthread_mutex_unlock(&global_result_mtx);
+
+	delete((int*)args);
+	return NULL;
+}
+
+static void split_level(umap_t initial_map)
+{
+	cerr << "Initial map size: " << initial_map.size() << endl;
+	cerr << "Splitted into " << n_agents << " agents" << endl;
+
+	World world(initial_map);
+	BdiAgent::world = world;
+
+	// Create and join threads
+	pthread_t threads[n_agents];
+	for (int i = 0; i < n_agents; i++) {
+		pthread_t thread;
+		int* agent_id = new int(i);
+		pthread_create(&thread, NULL, agent_thread, agent_id);
+		threads[i] = thread;
+	}
+	cerr << "Joining threads" << endl;
+	for (int i = 0; i < n_agents; i++) {
+		pthread_join(threads[i], NULL);
+	}
+	cerr << "Threads joined" << endl;
+
+	int max_depth = 0;
+	for (int i = 0; i < global_result.size(); i++) {
+		if (global_result[i].size() > max_depth)
+			max_depth = global_result[i].size();
+	}
+	for (int i = 0; i < global_result.size(); i++) {
+		while (global_result[i].size() < max_depth) {
+			global_result[i].push_back(actions[0]);
+		}
+	}
+}
+
+/** Main function */
 int main () {
 	cout << CLIENT_NAME << endl;
-	////cout << "#" << "Starting" << endl;
 
 	string line;
 	getline(cin, line); // #domain
@@ -32,10 +86,6 @@ int main () {
 	getline(cin, line); // level name
 
 	// Parse colors
-
-	//vector<int> agent_colors(10);
-	//vector<int> box_colors(26);
-
 	getline(cin, line); // #colors
 	getline(cin, line);
 	while (line[0] != '#') {
@@ -70,9 +120,7 @@ int main () {
 
 	// Parse initial state
 	vector<vector<char>> boxes;
-	vector<vector<char>> goals;
 	umap_t initial_map;
-	umap_t goals_map;
 
 	for (int i= 0; i < n_rows; i++) {
 		vector<bool> n_wall;
@@ -129,22 +177,16 @@ int main () {
 		getline(cin, line);
 	}
 
-	AgentState::agent_colors = agent_colors;
-	AgentState::box_colors = box_colors;
-	AgentState::walls = walls;
-	//AgentState::goals = goals;
-	//AgentState* initial_state = new AgentState(boxes, agent_rows, agent_cols);
+	split_level(initial_map);
+	cerr << "Final Result length: " << global_result[0].size() << endl;
 
-	vector<vector<Action>> result = split_level(boxes, goals, agent_rows,
-			agent_cols, initial_map, goals_map);
-	cerr << "Final Result length: " << result[0].size() << endl;
-
-	int n_agents = result.size();
-	for(int i = 0; i < result[0].size(); i++) {
+	// Send final plan to server
+	int n_agents = global_result.size();
+	for(int i = 0; i < global_result[0].size(); i++) {
 		string join_action = "";
-		for (int j = 0; j < result.size(); j++) {
-			join_action += result[j][i].name;
-			if (j != result.size()-1) {
+		for (int j = 0; j < global_result.size(); j++) {
+			join_action += global_result[j][i].name;
+			if (j != global_result.size()-1) {
 				join_action += "|";
 			}
 		}
@@ -153,5 +195,4 @@ int main () {
 	}
 
 	return 0;
-
 }

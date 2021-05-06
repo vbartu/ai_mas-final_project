@@ -14,9 +14,6 @@ class AgentState {
 	int agent_col;
     vector<vector<char>> boxes;
     vector<vector<char>> goal;
-    static vector<vector<bool>> walls;
-    static vector<int> agent_colors;
-    static vector<int> box_colors;
     Action action;
     AgentState *parent;
     int g; // depth

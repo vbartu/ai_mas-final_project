@@ -1,9 +1,9 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "world.h"
-#include "main.h"
 
 using namespace std;
 
@@ -11,20 +11,10 @@ pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 
-coordinates_t add(coordinates_t a, coordinates_t b)
-{
-	return (coordinates_t) {a.x + b.x, a.y + b.y};
-}
-
-coordinates_t sub(coordinates_t a, coordinates_t b)
-{
-	return (coordinates_t) {a.x - b.x, a.y - b.y};
-}
-
-World::World(umap_t intial_map, int number_agents)
+World::World(umap_t intial_map)
 {
 	this->current_time = 1;
-	this->agent_times = vector<int>(number_agents, 0);
+	this->agent_times = vector<int>(n_agents, 0);
 	this->level_map.push_back(intial_map);
 }
 

@@ -20,8 +20,4 @@ enum color {
 
 int get_color_value(string color);
 
-int get_color(char object);
-
-bool is_box(char object);
-
 #endif

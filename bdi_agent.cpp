@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "main.h"
+#include "global.h"
 #include "bdi_agent.h"
 #include "action.h"
 #include "graphsearch.h"
@@ -151,51 +151,6 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
 }
-
-//bool BdiAgent::update_action(Action action, AgentState* state)
-//{
-//	coordinates_t agent_pos = {state->
-//	if (action.type == ActionType::MOVE) {
-//		int next_agent_row = state->agent_row + action.ard;
-//		int next_agent_col = state->agent_col + action.acd;
-//		return this->world.update_postion(this->agent_id, this->time,
-//			state->agent_row, state->agent_col, next_agent_row, next_agent_col,
-//			true);
-//
-//	} else if (action.type == ActionType::PUSH) {
-//		int box_row = state->agent_row + action.ard;
-//		int box_col = state->agent_col + action.acd;
-//		int box_dst_row = box_row + action.brd;
-//		int box_dst_col = box_col + action.bcd;
-//		if (!this->world.update_postion(this->agent_id, this->time, box_row,
-//				box_col, box_dst_row, box_dst_col, false)) {
-//			return false;
-//		}
-//		int next_agent_row = state->agent_row + action.ard;
-//		int next_agent_col = state->agent_col + action.acd;
-//		this->world.update_postion(this->agent_id, this->time, state->agent_row,
-//			state->agent_col, next_agent_row, next_agent_col, true);
-//		return true;
-//
-//	} else if (action.type == ActionType::PULL) {
-//		int next_agent_row = state->agent_row + action.ard;
-//		int next_agent_col = state->agent_col + action.acd;
-//		if (!this->world.update_postion(this->agent_id, this->time,
-//				state->agent_row, state->agent_col, next_agent_row,
-//				next_agent_col, false)) {
-//			return false;
-//		}
-//		int box_row = state->agent_row - action.brd;
-//		int box_col = state->agent_col - action.bcd;
-//		int box_dst_row = box_row + action.brd;
-//		int box_dst_col = box_col + action.bcd;
-//		this->world.update_postion(this->agent_id, this->time, box_row, box_col,
-//			box_dst_row, box_dst_col, true);
-//		return true;
-//	}
-//	return true;
-//}
-
 
 void BdiAgent::run()
 {

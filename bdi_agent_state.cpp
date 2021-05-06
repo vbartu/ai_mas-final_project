@@ -3,15 +3,10 @@
 #include <random>
 #include <typeinfo>
 
-#include "action.h"
-#include "color.h"
+#include "global.h"
 #include "bdi_agent_state.h"
 
 using namespace std;
-
-vector<vector<bool>> AgentState::walls;
-vector<int> AgentState::agent_colors;
-vector<int> AgentState::box_colors;
 
 AgentState::AgentState(int agent_id, int agent_row, int agent_col,
 		vector<vector<char>> boxes, vector<vector<char>> goal) {
@@ -35,22 +30,7 @@ vector<AgentState*> AgentState::get_expanded_states() {
 	for (int act = 0; act < actions.size(); act++) {
 		Action action = actions[act];
 		if (this->is_applicable(action)) {
-			AgentState* state = this->apply_action(action);
-
-			bool error = false;
-			for (int row = 0; row < state->boxes.size(); row++) {
-				for (int col = 0; col < state->boxes[row].size(); col++) {
-					char box = state->boxes[row][col];
-					if (box != ' ' && state->walls[row][col]) {
-						error = true;
-						break;
-					}
-				}
-			}
-
-			//if (!error)
-			if (true) //TODO:
-				expanded_states.push_back(state);
+			expanded_states.push_back(this->apply_action(action));
 		}
 	}
 	return expanded_states;
@@ -170,7 +150,7 @@ bool AgentState::is_goal_state() {
 };
 
 bool AgentState::is_free(int row, int col) {
-	return !this->walls[row][col] && this->boxes[row][col] == ' ';
+	return !walls[row][col] && this->boxes[row][col] == ' ';
 }
 
 vector<Action> AgentState::extract_plan() {
@@ -214,7 +194,7 @@ string AgentState::repr()
         {
           line += this->boxes[row][col];
         }
-        else if (this->walls[row][col])
+        else if (walls[row][col])
         {
           line += "+";
         }
@@ -234,7 +214,7 @@ string AgentState::repr()
         {
           line += this->goal[row][col];
         }
-        else if (this->walls[row][col])
+        else if (walls[row][col])
         {
           line += "+";
         }

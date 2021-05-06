@@ -26,7 +26,6 @@ typedef struct goal_t {
 
 class BdiAgent {
 	public:
-		// static map<char, coordinates_t> goals;
 		static World world;
 
 		int agent_id;

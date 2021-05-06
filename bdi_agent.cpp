@@ -11,8 +11,6 @@
 using namespace std;
 
 
-static umap_t world2;
-
 World BdiAgent::world;
 
 BdiAgent::BdiAgent(int agent_id)

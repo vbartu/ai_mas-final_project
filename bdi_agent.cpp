@@ -14,8 +14,6 @@ using namespace std;
 static umap_t world2;
 
 World BdiAgent::world;
-vector<vector<char>> BdiAgent::goals;
-umap_t BdiAgent::goals_map;
 
 BdiAgent::BdiAgent(int agent_id)
 {
@@ -120,7 +118,6 @@ goal_t BdiAgent::get_next_goal(umap_t believes) {
 
 AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 {
-	int n_rows = this->goals.size(), n_cols = this->goals[0].size();
 	int agent_row, agent_col;
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
 	vector<vector<char>> goal(n_rows, vector<char>(n_cols, ' '));
@@ -180,7 +177,7 @@ void BdiAgent::run()
 				i++;
 				this->final_plan.push_back(next_action);
 				state = state->apply_action(next_action);
-				cerr << state->repr();
+				//cerr << state->repr();
 			}
 			else {
 				cerr << "Conflict!!!" << endl;

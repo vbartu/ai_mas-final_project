@@ -177,6 +177,8 @@ int main () {
 		getline(cin, line);
 	}
 
+	calculate_distances();
+
 	split_level(initial_map);
 	cerr << "Final Result length: " << global_result[0].size() << endl;
 

@@ -28,8 +28,6 @@ class BdiAgent {
 	public:
 		// static map<char, coordinates_t> goals;
 		static World world;
-		static vector<vector<char>> goals;
-		static umap_t goals_map;
 
 		int agent_id;
 		int time;

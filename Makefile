@@ -44,10 +44,10 @@ clean:
 	@echo "Project cleared"
 
 run: all
-	java -jar server/server.jar -c ./main -l $(LEVEL) -g
+	java -jar server/server.jar -c ./main -l $(LEVEL) -s 25 -g
 
 runt: all
-	java -jar server/server.jar -c ./main -l $(LEVEL)
+	java -jar server/server.jar -c ./main -l $(LEVEL) -s 25
 
 
 -include $(DEPS)

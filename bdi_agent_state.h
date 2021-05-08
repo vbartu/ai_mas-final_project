@@ -14,7 +14,7 @@ class AgentState {
 	int agent_col;
     vector<vector<char>> boxes;
     vector<vector<char>> goal;
-    Action action;
+    CAction action;
     AgentState *parent;
     int g; // depth
 
@@ -31,7 +31,7 @@ class AgentState {
 
     bool is_free(int row, int col);
 
-    vector<Action> extract_plan();
+    vector<CAction> extract_plan();
 
     int hashCode() const;
 

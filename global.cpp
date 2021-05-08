@@ -57,6 +57,11 @@ coordinates_t sub(coordinates_t a, coordinates_t b)
 	return (coordinates_t) {a.x - b.x, a.y - b.y};
 }
 
+bool equal(coordinates_t a, coordinates_t b)
+{
+	return (a.x == b.x && a.y == b.y);
+}
+
 
 bool is_box(char object) {
 	if (object >= 'A' && object <= 'Z') {

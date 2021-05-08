@@ -92,11 +92,14 @@ bool AgentState::is_applicable(Action action) {
 AgentState* AgentState::apply_action(Action action) {
     int copy_agent_row = this->agent_row;
     int copy_agent_col = this->agent_col;
+	CAction completed_action;
     vector<vector<char>> copy_boxes(this->boxes);
 
 	if (action.type == ActionType::MOVE) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
+		completed_action = CAction(action, {this->agent_row, this->agent_col},
+			{-1, -1});
 	} else if (action.type == ActionType::PUSH) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -108,6 +111,8 @@ AgentState* AgentState::apply_action(Action action) {
 		// Copy box to new cell, the delete it from the old one
 		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 		copy_boxes[box_row][box_col] = ' ';
+		completed_action = CAction(action, {this->agent_row, this->agent_col},
+			{box_row, box_col});
 	} else if (action.type == ActionType::PULL) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -119,13 +124,15 @@ AgentState* AgentState::apply_action(Action action) {
 		// Copy box to new cell, the delete it from the old one
 		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 		copy_boxes[box_row][box_col] = ' ';
+		completed_action = CAction(action, {this->agent_row, this->agent_col},
+			{box_row, box_col});
 	}
 
 	AgentState* copy_state;
 	copy_state = new AgentState(this->agent_id, copy_agent_row, copy_agent_col,
 		copy_boxes, this->goal);
     copy_state->parent = this;
-    copy_state->action = action;
+    copy_state->action = completed_action;
     copy_state->g = this->g + 1;
     return  copy_state;
 }
@@ -153,8 +160,8 @@ bool AgentState::is_free(int row, int col) {
 	return !walls[row][col] && this->boxes[row][col] == ' ';
 }
 
-vector<Action> AgentState::extract_plan() {
-    vector<Action> plan(this->g);
+vector<CAction> AgentState::extract_plan() {
+    vector<CAction> plan(this->g);
     AgentState* state = this;
     while (state->g != 0) {
 		plan[state->g - 1] = state->action;

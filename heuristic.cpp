@@ -42,9 +42,6 @@ static int precomputed_distance(const AgentState* state)
 	for (int row = 0; row < n_rows; row++) {
 		for (int col = 0; col < n_cols; col++) {
 			char goal = state->goal[row][col];
-			if (goal != ' ') {
-				cerr << "Box: " << goal << endl;
-			}
 			if (is_box(goal) && state->boxes[row][col] != goal) {
 				for (int box_row = 0; box_row < n_rows; box_row++) {
 					for (int box_col = 0; box_col < n_cols; box_col++) {

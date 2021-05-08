@@ -46,8 +46,12 @@ static void split_level(umap_t initial_map)
 	cerr << "Initial map size: " << initial_map.size() << endl;
 	cerr << "Splitted into " << n_agents << " agents" << endl;
 
-	World world(initial_map);
-	BdiAgent::world = world;
+	BdiAgent::world.push_back(initial_map);
+	BdiAgent::current_time;
+	BdiAgent::agent_time = vector<int>(n_agents, 0);
+	BdiAgent::next_actions = vector<CAction>(n_agents);
+	BdiAgent::conflicts = vector<bool>(n_agents, false);
+	BdiAgent::finished = vector<bool> (n_agents, false);
 
 	// Create and join threads
 	pthread_t threads[n_agents];

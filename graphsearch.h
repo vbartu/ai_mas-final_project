@@ -7,6 +7,6 @@
 
 using namespace std;
 
-vector<Action> search(AgentState* initial_state);
+vector<CAction> search(AgentState* initial_state);
 
 #endif // __GRAPHSEARCH_H

@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "global.h"
+
 using namespace std;
 
 enum ActionType {
@@ -24,12 +26,29 @@ public:
 
 	Action();
 
+	Action(const Action& action);
+
 	Action(string name, int type, int ard, int acd, int brd, int bcd);
 
 	bool operator==(const Action &action) const;
 
 
 };
+
+class CAction : public Action {
+	public:
+		coordinates_t agent_pos;
+		coordinates_t box_pos;
+		coordinates_t agent_final;
+		coordinates_t box_final;
+
+		CAction();
+		CAction(Action action, coordinates_t agent_pos);
+		CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos);
+
+		bool conflict(CAction other);
+};
+
 
 extern vector<Action> actions;
 

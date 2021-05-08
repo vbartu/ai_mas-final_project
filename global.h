@@ -26,6 +26,7 @@ typedef struct coordinates_t {
 
 coordinates_t add(coordinates_t a, coordinates_t b);
 coordinates_t sub(coordinates_t a, coordinates_t b);
+bool equal(coordinates_t a, coordinates_t b);
 
 
 class MapHashHelper {

@@ -13,11 +13,51 @@ Action::Action(string name, int type, int ard, int acd, int brd, int bcd)
 	this->brd = brd;
 	this->bcd = bcd;
 }
+Action::Action(const Action& action)
+{
+	this->name = action.name;
+	this->type = action.type;
+	this->ard = action.ard;
+	this->acd = action.acd;
+	this->brd = action.brd;
+	this->bcd = action.bcd;
+
+}
 
 bool Action::operator==(const Action& action) const
 {
 	return this->name == action.name;
 }
+
+
+CAction::CAction() {}
+
+CAction::CAction(Action action, coordinates_t agent_pos)
+		: Action(action)
+{
+	this->agent_pos = agent_pos;
+	this->box_pos = box_pos;
+	this->agent_final = add(agent_pos, {this->ard, this->acd});
+	this->box_final = this->agent_final;
+}
+
+CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos)
+		: Action(action)
+{
+	this->agent_pos = agent_pos;
+	this->box_pos = box_pos;
+	this->agent_final = add(agent_pos, {this->ard, this->acd});
+	this->box_final = add(box_pos, {this->brd, this->bcd});
+}
+
+bool CAction::conflict(CAction other)
+{
+	return (equal(this->agent_pos, other.agent_pos)
+			|| equal(this->agent_pos, other.agent_pos)
+			|| equal(this->box_pos, other.agent_pos)
+			|| equal(this->box_pos, other.box_pos));
+}
+
 
 const Action NoOp   = Action("NoOp", NOOP, 0, 0, 0, 0);
 const Action MoveN  = Action("Move(N)", MOVE, -1, 0, 0, 0);
@@ -53,3 +93,5 @@ vector<Action> actions = {NoOp, MoveN, MoveS, MoveE, MoveW, PushNN, PushNE,
 	PushNW, PushSS, PushSE, PushSW, PushEN, PushES, PushEE, PushWN, PushWS,
 	PushWW, PullNN, PullNE, PullNW, PullSS, PullSE, PullSW, PullEN, PullES,
 	PullEE, PullWN, PullWS, PullWW};
+
+

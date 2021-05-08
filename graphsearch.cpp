@@ -9,7 +9,7 @@
 
 using namespace std;
 
-vector<Action> search(AgentState* initial_state) {
+vector<CAction> search(AgentState* initial_state) {
 	int iterations = 0;
 	FrontierBestFS frontier;
 	frontier.add(initial_state);
@@ -17,7 +17,7 @@ vector<Action> search(AgentState* initial_state) {
 
 	while (true) {
 		if(frontier.size() == 0) {
-			vector<Action> action_vector;
+			vector<CAction> action_vector;
 			cerr << "Frontier empty error" << endl;
 			return action_vector;
 		}

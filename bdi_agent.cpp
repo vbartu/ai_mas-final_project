@@ -1,17 +1,26 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
+#include <unistd.h>
 
-#include "global.h"
 #include "bdi_agent.h"
-#include "action.h"
 #include "graphsearch.h"
-#include "color.h"
 
 using namespace std;
 
+vector<umap_t> BdiAgent::world;
+int BdiAgent::current_time = 0;
+pthread_mutex_t BdiAgent::world_mtx = PTHREAD_MUTEX_INITIALIZER;
+vector<CAction> BdiAgent::next_actions;
+vector<int> BdiAgent::agent_time;
+pthread_mutex_t BdiAgent::next_actions_mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t BdiAgent::next_actions_cond = PTHREAD_COND_INITIALIZER;
+vector<bool> BdiAgent::conflicts;
+bool BdiAgent::no_more_conflicts = false;
+pthread_mutex_t BdiAgent::conflicts_mtx = PTHREAD_MUTEX_INITIALIZER;
+vector<bool> BdiAgent::finished;
+pthread_mutex_t BdiAgent::finished_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-World BdiAgent::world;
 
 BdiAgent::BdiAgent(int agent_id)
 {
@@ -110,7 +119,6 @@ goal_t BdiAgent::get_next_goal(umap_t believes) {
 			}
 		}
 	}
-
 	return agent_goal;
 }
 
@@ -153,35 +161,159 @@ void BdiAgent::run()
 	goal_t intention;
 
 	while (true) {
-		believes = this->world.get_positions(this->time);
+		believes = this->get_current_map();
 		intention = this->get_next_goal(believes);
 		cerr << "Next goal " << intention.type << " " << intention.row << " " << intention.col << endl;
 		if (intention.type == NO_GOAL) {
-			this->world.finished(this->agent_id);
+			//this->world.finished(this->agent_id);
 			return;
 		}
 
+
 		AgentState* state = this->intention_to_state(believes, intention);
 		cerr << state->repr();
-		vector<Action> plan = search(state);
+		vector<CAction> plan = search(state);
 		cerr << "Plan result size: " << plan.size() << endl;
 		for (int i = 0; i < plan.size();) {
-			Action next_action = plan[i];
+			CAction next_action = plan[i];
+			this->time++;
+			this->set_next_action(next_action);
 			fprintf(stderr, "Next %d action(%d): %s\n", agent_id, time,
 				next_action.name.c_str());
 
-			this->time++;
-			if (world.update_position(agent_id, time, next_action, state)) {
-				i++;
-				this->final_plan.push_back(next_action);
-				state = state->apply_action(next_action);
-				//cerr << state->repr();
+			while (true) {
+				bool c = check_conflict(next_action);
+				if (c) {
+					;
+				} else {
+			cerr << 2 << endl;
+					assert(!pthread_mutex_lock(&conflicts_mtx));
+					if (no_more_conflicts) {
+						assert(!pthread_mutex_unlock(&conflicts_mtx));
+						assert(!pthread_mutex_lock(&world_mtx));
+						current_time++;
+						assert(!pthread_mutex_unlock(&world_mtx));
+						break;
+					}
+					assert(!pthread_mutex_unlock(&conflicts_mtx));
+					sleep(0.3);
+				}
 			}
-			else {
-				cerr << "Conflict!!!" << endl;
-				//assert(0);
-				this->final_plan.push_back(actions[0]);
-			}
+
+			update_position(next_action);
+
+			//if (world.update_position(agent_id, time, next_action, state)) {
+			//	i++;
+			//	this->final_plan.push_back(next_action);
+			//	state = state->apply_action(next_action);
+			//	//cerr << state->repr();
+			//}
+			//else {
+			//	cerr << "Conflict!!!" << endl;
+			//	//assert(0);
+			//	this->final_plan.push_back(actions[0]);
+			//}
 		}
+	}
+}
+
+umap_t BdiAgent::get_current_map()
+{
+	umap_t result;
+	assert(!pthread_mutex_lock(&world_mtx));
+	result = world[current_time];
+	assert(!pthread_mutex_unlock(&world_mtx));
+	return result;
+}
+
+void BdiAgent::set_next_action(CAction action)
+{
+	assert(!pthread_mutex_lock(&next_actions_mtx));
+	next_actions[this->agent_id] = action;
+	agent_time[this->agent_id] = this->time;
+	bool completed = true;
+	for (int t : agent_time) {
+		if (t != current_time + 1) {
+			completed = false;
+			break;
+		}
+	}
+	if (completed) {
+		assert(!pthread_mutex_lock(&world_mtx));
+		current_time++;
+		assert(!pthread_mutex_unlock(&world_mtx));
+		pthread_cond_broadcast(&next_actions_cond);
+	} else {
+		assert(!pthread_cond_wait(&next_actions_cond, &next_actions_mtx));
+	}
+	assert(!pthread_mutex_unlock(&next_actions_mtx));
+}
+
+bool BdiAgent::check_conflict(CAction next_action)
+{
+	vector<CAction> actions;
+	assert(!pthread_mutex_lock(&next_actions_mtx));
+	actions = next_actions;
+	assert(!pthread_mutex_unlock(&next_actions_mtx));
+
+	for (int i = 0; i < actions.size(); i++) {
+		CAction action = actions[i];
+		if (i == this->agent_id)
+			continue;
+
+		if (next_action.conflict(actions[i])) {
+			assert(!pthread_mutex_lock(&conflicts_mtx));
+			conflicts[this->agent_id] = true;
+			assert(!pthread_mutex_unlock(&conflicts_mtx));
+			return true;
+		}
+	}
+	assert(!pthread_mutex_lock(&conflicts_mtx));
+	if (conflicts[this->agent_id]) {
+		conflicts[this->agent_id] = false;
+	}
+	no_more_conflicts = true;
+	for(bool conflict : conflicts) {
+		if (conflict) {
+			no_more_conflicts = false;
+			break;
+		}
+	}
+	assert(!pthread_mutex_unlock(&conflicts_mtx));
+	return false;
+}
+
+void BdiAgent::update_position(CAction action)
+{
+	assert(!pthread_mutex_lock(&world_mtx));
+	if (current_time == world.size()) {
+		world.push_back(world.back());
+	}
+	assert(!pthread_mutex_unlock(&world_mtx));
+
+	if (action.type == ActionType::MOVE) {
+		assert(!pthread_mutex_lock(&world_mtx));
+		char agent = world[current_time][action.agent_pos];
+		world[current_time].erase(action.agent_pos);
+		world[current_time][action.agent_final] = agent;
+		assert(!pthread_mutex_unlock(&world_mtx));
+
+	} else if (action.type == ActionType::PUSH) {
+		assert(!pthread_mutex_lock(&world_mtx));
+		char box = world[current_time][action.box_pos];
+		world[current_time][action.box_final] = box;
+		char agent = world[current_time][action.agent_pos];
+		world[current_time][action.box_pos] = agent;
+		world[current_time].erase(action.agent_pos);
+		assert(!pthread_mutex_unlock(&world_mtx));
+
+	} else if (action.type == ActionType::PULL) {
+		assert(!pthread_mutex_lock(&world_mtx));
+		char agent = world[current_time][action.agent_pos];
+		world[current_time][action.agent_final] = agent;
+		char box = world[current_time][action.box_pos];
+		world[current_time][action.agent_pos] = box;
+		world[current_time].erase(action.box_pos);
+		assert(!pthread_mutex_unlock(&world_mtx));
 	}
 }

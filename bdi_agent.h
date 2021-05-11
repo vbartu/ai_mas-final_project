@@ -25,15 +25,23 @@ typedef struct goal_t {
 } goal_t;
 
 
+typedef struct conflict_t {
+	bool is_conlfict;
+	coordinates_t conflict_loc;
+	char object;
+	int agent_id;
+}
+
+
 class BdiAgent {
 	public:
 		static vector<umap_t> world;
 		static int current_time;
 		static pthread_mutex_t world_mtx;
-		static vector<CAction> next_actions;
-		static vector<int> agent_time;
-		static pthread_mutex_t next_actions_mtx;
-		static pthread_cond_t next_actions_cond;
+
+
+
+
 		static vector<bool> conflicts;
 		static bool no_more_conflicts;
 		static pthread_mutex_t conflicts_mtx;

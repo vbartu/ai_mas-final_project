@@ -7,6 +7,7 @@
 #include <queue>
 
 #include "bdi_agent_state.h"
+#include "conflict_state.h"
 #include "heuristic.h"
 
 using namespace std;
@@ -31,6 +32,19 @@ class FrontierBFS: public Frontier {
     bool is_empty();
     int size();
     bool contains(AgentState* state);
+    string getName();
+};
+
+class ConflictFrontierBFS {
+  public:
+    deque<ConflictState*> queue;
+    unordered_set<ConflictState*, ConflictHashHelper, ConflictEqualHelper> set;
+
+    void add(ConflictState* state);
+    ConflictState* pop();
+    bool is_empty();
+    int size();
+    bool contains(ConflictState* state);
     string getName();
 };
 

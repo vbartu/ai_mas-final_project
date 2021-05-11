@@ -35,6 +35,39 @@ string FrontierBFS::getName() {
 	return "breadth-first search";
 }
 
+/* ConflictFrontierBFS */
+
+void ConflictFrontierBFS::add(ConflictState* state) {
+	this->queue.push_front(state);
+	this->set.insert(state);
+}
+
+
+ConflictState* ConflictFrontierBFS::pop() {
+	ConflictState* state = this->queue.back();
+	this->queue.pop_back();
+	this->set.erase(state);
+	return state;
+}
+
+
+bool ConflictFrontierBFS::is_empty() {
+	return this->queue.empty();
+}
+
+int ConflictFrontierBFS::size() {
+	return this->queue.size();
+}
+
+bool ConflictFrontierBFS::contains(ConflictState* state) {
+	return this->set.count(state);
+}
+
+string ConflictFrontierBFS::getName() {
+	return "breadth-first search";
+}
+
+
 /* FrontierBestFS */
 
 void FrontierBestFS::add(AgentState* state) {

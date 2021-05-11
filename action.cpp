@@ -13,6 +13,7 @@ Action::Action(string name, int type, int ard, int acd, int brd, int bcd)
 	this->brd = brd;
 	this->bcd = bcd;
 }
+
 Action::Action(const Action& action)
 {
 	this->name = action.name;
@@ -53,7 +54,7 @@ CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos)
 bool CAction::conflict(CAction other)
 {
 	return (equal(this->agent_pos, other.agent_pos)
-			|| equal(this->agent_pos, other.agent_pos)
+			|| equal(this->agent_pos, other.box_pos)
 			|| equal(this->box_pos, other.agent_pos)
 			|| equal(this->box_pos, other.box_pos));
 }

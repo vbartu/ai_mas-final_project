@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cstdio>
-#include <random>
 #include <typeinfo>
 
 #include "global.h"

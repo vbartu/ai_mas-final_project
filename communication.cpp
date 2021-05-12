@@ -9,7 +9,7 @@ static pthread_mutex_t msg_queue_mtx;
 void send_msg_to_agent(int dst_agent_id, msg_t msg)
 {
 	pthread_mutex_lock(&msg_queue_mtx);
-	msg_queue[dst_agent_id].push(msg)
+	msg_queue[dst_agent_id].push(msg);
 	pthread_mutex_unlock(&msg_queue_mtx);
 }
 
@@ -19,14 +19,14 @@ void broadcast_msg(msg_t msg)
 	for (int i; i < n_agents; i++) {
 		if (msg.agent_id == i)
 			continue;
-		msg_queue[i].push(msg)
+		msg_queue[i].push(msg);
 	}
 	pthread_mutex_unlock(&msg_queue_mtx);
 }
 
 bool get_msg(int agent_id, msg_t* msg)
 {
-	success = true;
+	bool success = true;
 	pthread_mutex_lock(&msg_queue_mtx);
 	if (msg_queue[agent_id].empty()) {
 		success = false;

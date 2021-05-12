@@ -6,6 +6,7 @@
 #include "bdi_agent_state.h"
 #include "global.h"
 #include "action.h"
+#include "conflict_state.h"
 
 using namespace std;
 
@@ -30,7 +31,7 @@ typedef struct conflict_t {
 	coordinates_t conflict_loc;
 	char object;
 	int agent_id;
-}
+} conflitc_t;
 
 
 class BdiAgent {
@@ -59,6 +60,8 @@ class BdiAgent {
 
 		goal_t get_next_goal(umap_t believes);
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
+		ConflictState* conflict_to_state(umap_t believes, char other_id,
+				vector<CAction> actions, vector<CAction> other_actions);
 
 		umap_t get_current_map();
 		void set_next_action(CAction action);

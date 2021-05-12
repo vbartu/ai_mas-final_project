@@ -22,7 +22,7 @@ typedef struct msg_info_conflict_t {
 	goal_type_t goal_type;
 	//int sequence_number;
 	vector<CAction> next_actions;
-}
+} msg_info_conflict_t;
 
 typedef struct msg_t {
 	msg_type_t type;
@@ -30,7 +30,7 @@ typedef struct msg_t {
 	union info {
 		CAction next_action;
 		msg_info_conflict_t conflict;
-	}
+	};
 } msg_t;
 
 void send_msg_to_agent(int dst_agent_id, msg_t msg);

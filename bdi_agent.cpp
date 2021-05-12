@@ -5,6 +5,7 @@
 
 #include "bdi_agent.h"
 #include "graphsearch.h"
+#include "communication.h"
 
 using namespace std;
 
@@ -155,7 +156,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
 }
 
-ConflictState* conflict_to_state(umap_t believes, int other_id,
+ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 		vector<CAction> actions, vector<CAction> other_actions) {
 	vector<int> agent_rows(2);
 	vector<int> agent_cols(2);
@@ -165,21 +166,22 @@ ConflictState* conflict_to_state(umap_t believes, int other_id,
 	for (auto& it : believes) {
 		coordinates_t c = it.first;
 		char obj = believes[c];
-		if (obj - '0' == this->agent_id) {
+		if (int(obj) - int('0') == this->agent_id) {
 			agent_rows[0] = c.x;
 			agent_cols[0] = c.y;
-		} else if (obj - '0' == other_id) {
+		} else if (int(obj) - int('0') == int(other_id)) {
 			agent_rows[1] = c.x;
 			agent_cols[1] = c.y;
 		} else if (is_box(obj) && (get_color(this->agent_id) == get_color(obj)
 					|| get_color(other_id) == get_color(obj))) {
 			boxes[c.x][c.y] = obj;
+			// why do we need al the other goals in this ConflictState? Is it no sufficient to have the new goals that we find later?
+			// It will be easier for the search i think
 			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
 				goals[it.first.x][it.first.y] = obj;
 			}
 		}
 	}
-
 
 	for (int i = 0; i < actions.size(); i++) {
 		for (int j = 0; j < other_actions.size(); j++) {
@@ -189,16 +191,19 @@ ConflictState* conflict_to_state(umap_t believes, int other_id,
 				if (actions[i].type == ActionType::PUSH
 						|| actions[i].type == ActionType::PULL) {
 					coordinates_t b1 = actions[i].box_final;
-					goals[b1.x][b1.y] = 
+					goals[b1.x][b1.y] = actions[i].box;
+				}
+				coordinates_t a2 = other_actions[j].agent_final;
+				goals[a2.x][a2.y] = other_id;
+				if (other_actions[j].type == ActionType::PUSH
+						|| other_actions[j].type == ActionType::PULL) {
+					coordinates_t b2 = other_actions[j].box_final;
+					goals[b2.x][b2.y] = other_actions[j].box;
 				}
 			}
 		}
 	}
 }
-
-
-
-
 
 
 /** Conflicts:
@@ -247,7 +252,7 @@ void BdiAgent::run()
 					switch (msg.type) {
 
 					case MSG_TYPE_NEXT_ACTION:
-						if (next_action.conflicts_with(msg.info.next_action)) {
+						if (next_action.conflicts(msg.info.next_action)) {
 							vector<CAction> next_actions;
 							for (int j = i; j < plan.size() && j < i+3; j++) {
 								next_actions.push_back(plan[j]);
@@ -255,11 +260,11 @@ void BdiAgent::run()
 							msg = {
 								.agent_id = this->agent_id,
 								.type = MSG_TYPE_CONFLICT,
-								.info.config = {
+								.info.conflit = {
 									.goal_type = intention.type,
 									.next_actions = next_actions,
 								}
-							};
+							}
 							send_msg_to_agent(sender, msg)
 						}
 						break;
@@ -272,9 +277,13 @@ void BdiAgent::run()
 								next_actions.push_back(plan[j]);
 							}
 							vector<CAction> other_actions = msg.info.conflict.next_actions;
+
+							ConflictState* conflict_state = conflict_to_state(believes, sender,
+								next_actions, other_actions);
+							cerr << conflict_state->repr();
+							vector<vector<CAction>> conflict_plan = conflict_search(conflict_state);
 						}
 					}
-
 				} else {
 					sleep(0.3);
 				}
@@ -306,38 +315,38 @@ umap_t BdiAgent::get_current_map()
 	return result;
 }
 
-bool BdiAgent::check_conflict(CAction next_action)
-{
-	vector<CAction> actions;
-	assert(!pthread_mutex_lock(&next_actions_mtx));
-	actions = next_actions;
-	assert(!pthread_mutex_unlock(&next_actions_mtx));
-
-	for (int i = 0; i < actions.size(); i++) {
-		if (i == this->agent_id)
-			continue;
-
-		if (next_action.conflict(actions[i])) {
-			assert(!pthread_mutex_lock(&conflicts_mtx));
-			conflicts[this->agent_id] = true;
-			assert(!pthread_mutex_unlock(&conflicts_mtx));
-			return true;
-		}
-	}
-	assert(!pthread_mutex_lock(&conflicts_mtx));
-	if (conflicts[this->agent_id]) {
-		conflicts[this->agent_id] = false;
-	}
-	no_more_conflicts = true;
-	for(bool conflict : conflicts) {
-		if (conflict) {
-			no_more_conflicts = false;
-			break;
-		}
-	}
-	assert(!pthread_mutex_unlock(&conflicts_mtx));
-	return false;
-}
+// bool BdiAgent::check_conflict(CAction next_action)
+// {
+// 	vector<CAction> actions;
+// 	assert(!pthread_mutex_lock(&next_actions_mtx));
+// 	actions = next_actions;
+// 	assert(!pthread_mutex_unlock(&next_actions_mtx));
+//
+// 	for (int i = 0; i < actions.size(); i++) {
+// 		if (i == this->agent_id)
+// 			continue;
+//
+// 		if (next_action.conflicts(actions[i])) {
+// 			assert(!pthread_mutex_lock(&conflicts_mtx));
+// 			conflicts[this->agent_id] = true;
+// 			assert(!pthread_mutex_unlock(&conflicts_mtx));
+// 			return true;
+// 		}
+// 	}
+// 	assert(!pthread_mutex_lock(&conflicts_mtx));
+// 	if (conflicts[this->agent_id]) {
+// 		conflicts[this->agent_id] = false;
+// 	}
+// 	no_more_conflicts = true;
+// 	for(bool conflict : conflicts) {
+// 		if (conflict) {
+// 			no_more_conflicts = false;
+// 			break;
+// 		}
+// 	}
+// 	assert(!pthread_mutex_unlock(&conflicts_mtx));
+// 	return false;
+// }
 
 void BdiAgent::update_position(CAction action)
 {

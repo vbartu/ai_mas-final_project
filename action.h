@@ -41,11 +41,13 @@ class CAction : public Action {
 		coordinates_t box_pos;
 		coordinates_t agent_final;
 		coordinates_t box_final;
+		char box;
 
 		CAction();
 		CAction(Action action, coordinates_t agent_pos);
-		CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos);
+		CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos, char box);
 
+		bool conflicts(CAction other);
 		bool conflicts_with(CAction other);
 };
 

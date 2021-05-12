@@ -98,7 +98,7 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
-			{-1, -1});
+			{-1, -1}, '0');
 	} else if (action.type == ActionType::PUSH) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -111,7 +111,7 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
-			{box_row, box_col});
+			{box_row, box_col}, copy_boxes[box_row][box_col]);
 	} else if (action.type == ActionType::PULL) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -124,7 +124,7 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
-			{box_row, box_col});
+			{box_row, box_col}, copy_boxes[box_row][box_col]);
 	}
 
 	AgentState* copy_state;

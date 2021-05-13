@@ -39,10 +39,6 @@ class BdiAgent {
 		static vector<umap_t> world;
 		static int current_time;
 		static pthread_mutex_t world_mtx;
-
-
-
-
 		static vector<bool> conflicts;
 		static bool no_more_conflicts;
 		static pthread_mutex_t conflicts_mtx;
@@ -53,7 +49,7 @@ class BdiAgent {
 
 		int agent_id;
 		int time;
-		vector<Action> final_plan;
+		vector<CAction> final_plan;
 
 		BdiAgent(int agent_id);
 
@@ -61,7 +57,9 @@ class BdiAgent {
 		goal_t get_next_goal(umap_t believes);
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
 		ConflictState* conflict_to_state(umap_t believes, char other_id,
-				vector<CAction> actions, vector<CAction> other_actions);
+				CAction action, CAction other_action);
+
+
 
 		umap_t get_current_map();
 		void set_next_action(CAction action);

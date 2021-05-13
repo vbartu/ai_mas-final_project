@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "bdi_agent_state.h"
+#include "conflict_state.h"
 
 using namespace std;
 

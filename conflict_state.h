@@ -14,6 +14,7 @@ class ConflictState {
 	vector<int> agent_cols;
 	vector<vector<char>> boxes;
 	vector<vector<char>> goals;
+	int conflict_n_agents;
 	vector<CAction> joint_action;
 	ConflictState *parent;
 	int g; // depth

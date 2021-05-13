@@ -45,10 +45,11 @@ class CAction : public Action {
 
 		CAction();
 		CAction(Action action, coordinates_t agent_pos);
-		CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos, char box);
+		CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos,
+			char box);
 
 		bool conflicts(CAction other);
-		bool conflicts_with(CAction other);
+		bool conflicts_goal(CAction other);
 };
 
 

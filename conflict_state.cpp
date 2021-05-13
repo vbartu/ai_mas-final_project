@@ -17,7 +17,7 @@ ConflictState::ConflictState(vector<int> agent_ids, vector<int> agent_rows,
 	this->agent_cols = agent_cols;
 	this->boxes = boxes;
 	this->goals = goals;
-	this->n_agents = this->agent_rows.size();
+	this->conflict_n_agents = this->agent_rows.size();
 	this->g = 0;
 }
 
@@ -29,8 +29,8 @@ bool ConflictState::operator==(const ConflictState &other) const {
 }
 
 vector<ConflictState*> ConflictState::get_expanded_states() {
-	vector<vector<Action>> applicable_actions(n_agents);
-	for (int agent = 0; agent < num_agents; agent++) {
+	vector<vector<Action>> applicable_actions(conflict_n_agents);
+	for (int agent = 0; agent < conflict_n_agents; agent++) {
 		for (int act = 0; act < actions.size(); act++) {
 			Action action = actions[act];
 			if (is_applicable(agent, action)) {
@@ -39,12 +39,12 @@ vector<ConflictState*> ConflictState::get_expanded_states() {
 		}
 	}
 
-	vector<Action> joint_action(n_agents);
-	int actions_permutation[n_agents] = {};
+	vector<Action> joint_action(conflict_n_agents);
+	int actions_permutation[conflict_n_agents] = {};
 	vector<ConflictState*> expanded_states;
 
 	while (true) {
-		for (int agent = 0; agent < n_agents; agent++) {
+		for (int agent = 0; agent < conflict_n_agents; agent++) {
 			joint_action[agent] = applicable_actions[agent][actions_permutation[agent]];
 		}
 
@@ -53,13 +53,13 @@ vector<ConflictState*> ConflictState::get_expanded_states() {
 		}
 
 		bool done = false;
-		for (int agent = 0; agent < n_agents; agent++) {
+		for (int agent = 0; agent < conflict_n_agents; agent++) {
 			if (actions_permutation[agent] < applicable_actions[agent].size() - 1) {
 				actions_permutation[agent] += 1;
 				break;
 			} else {
 				actions_permutation[agent] = 0;
-				if (agent == n_agents - 1)
+				if (agent == conflict_n_agents - 1)
 					done = true;
 			}
 		}
@@ -128,12 +128,12 @@ bool ConflictState::is_applicable(int agent, Action action) {
 
 bool ConflictState::is_conflicting(vector<Action> joint_action)
 {
-	vector<int> dst_rows(n_agents);
-	vector<int> dst_cols(n_agents);
-	vector<int> box_rows(n_agents);
-	vector<int> box_cols(n_agents);
+	vector<int> dst_rows(conflict_n_agents);
+	vector<int> dst_cols(conflict_n_agents);
+	vector<int> box_rows(conflict_n_agents);
+	vector<int> box_cols(conflict_n_agents);
 
-	for (int agent = 0; agent < n_agents; agent++) {
+	for (int agent = 0; agent < conflict_n_agents; agent++) {
 		Action action = joint_action[agent];
 		int agent_row = this->agent_rows[agent];
 		int agent_col = this->agent_cols[agent];
@@ -156,8 +156,8 @@ bool ConflictState::is_conflicting(vector<Action> joint_action)
 		}
 	}
 
-	for (int a1 = 0; a1 < n_agents; a1++) {
-		for (int a2 = a1+1; a2 < n_agents; a2++) {
+	for (int a1 = 0; a1 < conflict_n_agents; a1++) {
+		for (int a2 = a1+1; a2 < conflict_n_agents; a2++) {
 			if ((dst_rows[a1] == dst_rows[a2] && dst_cols[a1] == dst_cols[a2])
 					|| (dst_rows[a1] == box_rows[a2] && dst_cols[a1] == box_cols[a2])
 					|| (box_rows[a1] == dst_rows[a2] && box_cols[a1] == dst_cols[a2])
@@ -173,16 +173,20 @@ bool ConflictState::is_conflicting(vector<Action> joint_action)
 ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 	vector<int> copy_agents_rows(this->agent_rows);
 	vector<int> copy_agents_cols(this->agent_cols);
-	vector<CAction> completed_actions(n_agents);
+	vector<CAction> completed_actions(conflict_n_agents);
 	vector<vector<char>> copy_boxes(this->boxes);
 
 	for (int agent = 0; agent < joint_action.size(); agent++) {
-		Action action = joint_action[agent]
-		if (joint_action[agent].type == ActionType::MOVE) {
+		Action action = joint_action[agent];
+		if (joint_action[agent].type == ActionType::NOOP) {
+			completed_actions[agent] = CAction(action,
+				{agent_rows[agent], agent_cols[agent]});
+		}
+		else if (joint_action[agent].type == ActionType::MOVE) {
 			copy_agents_rows[agent] += action.ard;
 			copy_agents_cols[agent] += action.acd;
 			completed_actions[agent] = CAction(action,
-				{agent_rows[agent], agent_cols[agent]}, {-1, -1});
+				{agent_rows[agent], agent_cols[agent]});
 		}
 		else if (joint_action[agent].type == ActionType::PUSH) {
 			copy_agents_rows[agent] += action.ard;
@@ -196,7 +200,8 @@ ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 			copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 			copy_boxes[box_row][box_col] = ' ';
 			completed_actions[agent] = CAction(action,
-				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col});
+				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col},
+				copy_boxes[box_row][box_col]);
 		}
 		else if (joint_action[agent].type == ActionType::PULL) {
 			copy_agents_rows[agent] += joint_action[agent].ard;
@@ -210,7 +215,8 @@ ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 			copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
 			copy_boxes[box_row][box_col] = ' ';
 			completed_actions[agent] = CAction(action,
-				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col});
+				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col},
+				copy_boxes[box_row][box_col]);
 		}
 	}
 
@@ -218,7 +224,7 @@ ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 	copy_state = new ConflictState(this->agent_ids, copy_agents_rows,
 		copy_agents_cols, copy_boxes, this->goals);
 	copy_state->parent = this;
-	copy_state->joint_action = joint_action;
+	copy_state->joint_action = completed_actions;
 	copy_state->g = this->g + 1;
 	return	copy_state;
 }
@@ -239,7 +245,7 @@ bool ConflictState::is_goal_state() {
 }
 
 char ConflictState::agent_at(int row, int col) const {
-	for (int agent = 0; agent < this->n_agents; agent++) {
+	for (int agent = 0; agent < this->conflict_n_agents; agent++) {
 		if (this->agent_rows[agent] == row && this->agent_cols[agent] == col) {
 			return this->agent_ids[agent] + '0';
 		}
@@ -256,7 +262,7 @@ vector<vector<CAction>> ConflictState::extract_plan() {
 	ConflictState* state = this;
 	while (state->g != 0) {
 		plan[state->g - 1] = state->joint_action;
-		state = state->parent
+		state = state->parent;
 	}
 	return plan;
 }
@@ -272,7 +278,7 @@ int ConflictState::hashCode() const {
 			}
 		}
 	}
-	for (int agent = 0; agent < n_agents; agent++) {
+	for (int agent = 0; agent < conflict_n_agents; agent++) {
 		result = prime * result + this->agent_rows[agent] * this->boxes[0].size()
 			+ this->agent_cols[agent];
 	}
@@ -287,7 +293,7 @@ string ConflictState::repr()
 		for (int col = 0; col < this->boxes[row].size(); col++) {
 			if (this->boxes[row][col] != ' ') {
 				line += this->boxes[row][col];
-			} else if (this->walls[row][col]) {
+			} else if (walls[row][col]) {
 				line += "+";
 			} else if (agent_at(row, col)) {
 				line += agent_at(row, col);
@@ -299,7 +305,7 @@ string ConflictState::repr()
 		for (int col = 0; col < this->boxes[row].size(); col++) {
 			if (this->goals[row][col] != ' ') {
 				line += this->goals[row][col];
-			} else if (this->walls[row][col]) {
+			} else if (walls[row][col]) {
 				line += "+";
 			} else {
 				line += " ";

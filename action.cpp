@@ -37,13 +37,14 @@ CAction::CAction(Action action, coordinates_t agent_pos)
 		: Action(action)
 {
 	this->agent_pos = agent_pos;
-	this->box_pos = box_pos;
+	this->box_pos = agent_pos;
 	this->agent_final = add(agent_pos, {this->ard, this->acd});
 	this->box_final = this->agent_final;
+	this->box = 0;
 }
 
-CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos, char box)
-		: Action(action)
+CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos,
+		char box) : Action(action)
 {
 	this->agent_pos = agent_pos;
 	this->box_pos = box_pos;
@@ -56,12 +57,11 @@ bool CAction::conflicts(CAction other)
 {
 	// maybe the first 4 where we check only the current position doesn't make really sense
 	// since in each state we check for conflict in the next state, s basically you will never end up
-	// in a state where your current position is in conflict with the current positio of something else
+	// in a state where your current position is in conflict with the current positio of something else -> you are right, but there is no harm in checking
 	return equal(this->agent_pos, other.agent_pos)
 			|| equal(this->agent_pos, other.box_pos)
 			|| equal(this->box_pos, other.agent_pos)
 			|| equal(this->box_pos, other.box_pos)
-
 			|| equal(this->agent_pos, other.agent_final)
 			|| equal(this->agent_pos, other.box_final)
 			|| equal(this->agent_final, other.agent_pos)
@@ -72,7 +72,7 @@ bool CAction::conflicts(CAction other)
 			|| equal(this->box_final, other.box_final);
 }
 
-bool CAction::conflicts_with(CAction other)
+bool CAction::conflicts_goal(CAction other)
 {
 	return equal(this->agent_final, other.agent_final)
 		|| equal(this->agent_final, other.box_final)

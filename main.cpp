@@ -30,7 +30,13 @@ static void* agent_thread(void* args) {
 	while (global_result.size() <= agent_id) {
 		global_result.push_back(vector<Action>(0));
 	}
-	global_result[agent_id] = agent.final_plan;
+	//global_result[agent_id] = agent.final_plan;
+	vector<Action> aux;
+	for (CAction a : agent.final_plan) {
+		Action b = a;
+		aux.push_back(b);
+	}
+	global_result[agent_id] = aux;
 	
 	for (int i = agent.final_plan.size(); i < global_result.size(); i++) {
 		global_result[i].push_back(actions[0]);
@@ -48,8 +54,6 @@ static void split_level(umap_t initial_map)
 
 	BdiAgent::world.push_back(initial_map);
 	BdiAgent::current_time;
-	BdiAgent::agent_time = vector<int>(n_agents, 0);
-	BdiAgent::next_actions = vector<CAction>(n_agents);
 	BdiAgent::conflicts = vector<bool>(n_agents, false);
 	BdiAgent::finished = vector<bool> (n_agents, false);
 

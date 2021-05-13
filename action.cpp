@@ -55,9 +55,6 @@ CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos,
 
 bool CAction::conflicts(CAction other)
 {
-	// maybe the first 4 where we check only the current position doesn't make really sense
-	// since in each state we check for conflict in the next state, s basically you will never end up
-	// in a state where your current position is in conflict with the current positio of something else -> you are right, but there is no harm in checking
 	return equal(this->agent_pos, other.agent_pos)
 			|| equal(this->agent_pos, other.box_pos)
 			|| equal(this->box_pos, other.agent_pos)

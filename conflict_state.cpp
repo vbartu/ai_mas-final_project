@@ -10,7 +10,7 @@ using namespace std;
 
 ConflictState::ConflictState(vector<int> agent_ids, vector<int> agent_rows,
 		vector<int> agent_cols, vector<vector<char>> boxes,
-		vector<vector<char>> goal)
+		vector<vector<char>> goals)
 {
 	this->agent_ids = agent_ids;
 	this->agent_rows = agent_rows;
@@ -258,10 +258,12 @@ bool ConflictState::is_free(int row, int col) {
 }
 
 vector<vector<CAction>> ConflictState::extract_plan() {
-	vector<vector<CAction>> plan(this->g);
+	vector<vector<CAction>> plan(conflict_n_agents, vector<CAction>(this->g));
 	ConflictState* state = this;
 	while (state->g != 0) {
-		plan[state->g - 1] = state->joint_action;
+		for (int agent = 0; agent < conflict_n_agents; agent++) {
+			plan[agent][state->g - 1] = state->joint_action[agent];
+		}
 		state = state->parent;
 	}
 	return plan;
@@ -302,7 +304,7 @@ string ConflictState::repr()
 			}
 		}
 		line += "     ";
-		for (int col = 0; col < this->boxes[row].size(); col++) {
+		for (int col = 0; col < this->goals[row].size(); col++) {
 			if (this->goals[row][col] != ' ') {
 				line += this->goals[row][col];
 			} else if (walls[row][col]) {

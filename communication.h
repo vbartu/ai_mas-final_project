@@ -39,14 +39,15 @@ typedef union msg_params_t {
 typedef struct msg_t {
 	msg_type_t type;
 	int agent_id;
+	int time;
 	CAction next_action;
 	msg_info_conflict_t conflict;
 	conflict_agents_resolved_t conflict_resolved;
 } msg_t;
 
-void send_msg_to_agent(int dst_agent_id, msg_t msg);
-void broadcast_msg(msg_t msg);
-bool get_msg(int agent_id, msg_t* msg);
+void send_msg_to_agent(int time, int dst_agent_id, msg_t msg);
+void broadcast_msg(int time, msg_t msg);
+bool get_msg(int time, int agent_id, msg_t* msg);
 
 
 #endif // __COMMUNICATION_H

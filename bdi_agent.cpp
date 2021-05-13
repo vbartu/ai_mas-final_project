@@ -71,7 +71,7 @@ goal_t BdiAgent::get_next_goal(umap_t believes) {
 	}
 
 	// Look for boxes not yet in their goals
-	goal_t agent_goal = {.type = NO_GOAL};
+	goal_t agent_goal = {.type = NO_GOAL, agent_coord.x, agent_coord.y};
 	for (auto goal_it : goals_map) {
 		coordinates_t goal_coord = goal_it.first;
 		char goal_obj = goal_it.second;
@@ -168,11 +168,11 @@ void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_in
 
 ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 		CAction action, CAction other_action) {
-	vector<int> agent_ids(2);
+	vector<int> agent_ids;
 	vector<int> agent_rows(2);
 	vector<int> agent_cols(2);
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
-	vector<vector<char>> goals(n_rows, vector<char>(n_cols, ' '));
+	vector<vector<char>> conflict_goals(n_rows, vector<char>(n_cols, ' '));
 
 	agent_ids.push_back(this->agent_id);
 	agent_ids.push_back(other_id);
@@ -189,30 +189,30 @@ ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 		} else if (is_box(obj) && (get_color(this->agent_id) == get_color(obj)
 					|| get_color(other_id) == get_color(obj))) {
 			boxes[c.x][c.y] = obj;
-			// why do we need al the other goals in this ConflictState? Is it no sufficient to have the new goals that we find later?
+			// why do we need al the other conflict_goals in this ConflictState? Is it no sufficient to have the new conflict_goals that we find later?
 			// It will be easier for the search i think
 			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
-				goals[it.first.x][it.first.y] = obj;
+				conflict_goals[it.first.x][it.first.y] = obj;
 			}
 		}
 	}
 
 	coordinates_t a1 = action.agent_final;
-	goals[a1.x][a1.y] = this->agent_id + '0';
+	conflict_goals[a1.x][a1.y] = this->agent_id + '0';
 	if (action.type == ActionType::PUSH
 			|| action.type == ActionType::PULL) {
 		coordinates_t b1 = action.box_final;
-		goals[b1.x][b1.y] = action.box;
+		conflict_goals[b1.x][b1.y] = action.box;
 	}
 	coordinates_t a2 = other_action.agent_final;
-	goals[a2.x][a2.y] = other_id;
+	conflict_goals[a2.x][a2.y] = other_id + '0';
 	if (other_action.type == ActionType::PUSH
 			|| other_action.type == ActionType::PULL) {
 		coordinates_t b2 = other_action.box_final;
-		goals[b2.x][b2.y] = other_action.box;
+		conflict_goals[b2.x][b2.y] = other_action.box;
 	}
 
-	return new ConflictState(agent_ids, agent_rows, agent_cols, boxes, goals);
+	return new ConflictState(agent_ids, agent_rows, agent_cols, boxes, conflict_goals);
 }
 
 
@@ -230,33 +230,25 @@ void BdiAgent::run()
 	while (true) {
 		believes = this->get_current_map();
 		intention = this->get_next_goal(believes);
-		cerr << "Next goal " << intention.type << " " << intention.row << " " << intention.col << endl;
 
 		vector<CAction> plan;
 		if (intention.type == NO_GOAL) {
-			//this->world.finished(this->agent_id);
-			plan.push_back(CAction(actions[0], final_plan.back().agent_final));
-			//return;
+			plan.push_back(CAction(actions[0], {intention.row, intention.col}));
 		} else {
 			AgentState* state = this->intention_to_state(believes, intention);
-			cerr << state->repr();
+			//cerr << state->repr();
 			plan = search(state);
-			cerr << "Plan result size: " << plan.size() << endl;
+			//cerr << "Plan result size: " << plan.size() << endl;
 		}
 
+		for (int i = 0; i < plan.size(); i++) {
+			plan_loop:
 
-		for (int i = 0; i < plan.size();) {
 			CAction next_action = plan[i];
-			this->time++;
-			fprintf(stderr, "Next %d action(%d): %s\n", agent_id, time,
-				next_action.name.c_str());
-			//believes = this->get_current_map();
+			this->time;
+			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\n", agent_id, time,
+				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y);
 
-			msg_t msg;
-			msg.agent_id = this->agent_id;
-			msg.type = MSG_TYPE_NEXT_ACTION;
-			msg.next_action = next_action;
-			broadcast_msg(msg);
 			
 			vector<bool> conflicts_with_other(n_agents, true);
 			conflicts_with_other[this->agent_id] = false; // CHECK boxes
@@ -265,17 +257,23 @@ void BdiAgent::run()
 			if (next_action.type == ActionType::NOOP)
 				noop_ops[this->agent_id] = true;
 
-			bool comm_loop = true;
-			while (comm_loop) { // Communication loop
-				if (get_msg(this->agent_id, &msg)) {
+			msg_t msg;
+			msg.agent_id = this->agent_id;
+			msg.type = MSG_TYPE_NEXT_ACTION;
+			msg.next_action = next_action;
+			broadcast_msg(this->time, msg);
+
+			bool step_finished = false;
+			while (!step_finished) { // Communication loop
+				if (get_msg(this->time, this->agent_id, &msg)) {
 					int sender = msg.agent_id;
-					//cerr << "Agent " << this->agent_id << ": MSG (" << sender << ") type " << msg.type << endl;
+					cerr << "Agent " << this->agent_id << ": MSG (" << sender << ") type " << msg.type << endl;
 
 					switch (msg.type) {
 
 					case MSG_TYPE_NEXT_ACTION:
 						if (next_action.conflicts(msg.next_action)) {
-							cerr << "CONFLICT!!!!! " << sender;
+							cerr << "Agent " << agent_id << " CONFLICT!!!!! from " << sender << " time : " << this->time << endl;
 							vector<CAction> next_actions;
 							for (int j = i; j < plan.size() && j < i+3; j++) {
 								next_actions.push_back(plan[j]);
@@ -286,7 +284,7 @@ void BdiAgent::run()
 									.goal_type = intention.type,
 									.next_actions = next_actions,
 								};
-							send_msg_to_agent(sender, msg);
+							send_msg_to_agent(this->time, sender, msg);
 						} else {
 							if (msg.next_action.type == ActionType::NOOP) {
 								noop_ops[sender] = true;
@@ -304,23 +302,31 @@ void BdiAgent::run()
 							}
 
 							conflicts_with_other[sender] = false;
+							bool no_conflicts = true;
 							for (bool c : conflicts_with_other) {
-								if (c)
+								if (c) {
+									no_conflicts = false;
 									break;
+								}
 							}
-							finished[this->agent_id] = true;
-							msg.agent_id = this->agent_id;
-							msg.type = MSG_TYPE_STEP_FINISHED;
-							broadcast_msg(msg);
+							if (no_conflicts) {
+								finished[this->agent_id] = true;
+								msg.agent_id = this->agent_id;
+								msg.type = MSG_TYPE_STEP_FINISHED;
+								broadcast_msg(this->time, msg);
+							}
 						}
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:
+						//cerr << "A "<< agent_id << " FINISHED from " << sender << endl;
 						finished[sender] = true;
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS:
 						if (this->agent_id < sender) {
+							believes = this->get_current_map();
+							cerr << "Solving conflict!!!!! " << sender << " time " << this-> time << endl;
 							// Resolve conflict
 							vector<CAction> next_actions;
 							for (int j = i; j < plan.size() && j < i+3; j++) {
@@ -335,6 +341,10 @@ void BdiAgent::run()
 								next_actions[a1_skip], other_actions[a2_skip]);
 							cerr << conflict_state->repr();
 							vector<vector<CAction>> conflict_plan = conflict_search(conflict_state);
+							cerr << "Solved!!!!! " << conflict_plan[0].size() << " skip: " << a1_skip << " " << a2_skip << endl;
+							for (int i = 0; i < conflict_plan[0].size(); i ++) {
+								cerr << conflict_plan[0][i].name << "|" << conflict_plan[1][i].name << endl;
+							}
 
 							msg.agent_id = this->agent_id;
 							msg.type = MSG_TYPE_CONFLICT_AGENTS_RESOLVED;
@@ -342,56 +352,56 @@ void BdiAgent::run()
 								.skip = a2_skip,
 								.new_actions = conflict_plan[1],
 							};
-							send_msg_to_agent(sender, msg);
-							plan.erase(plan.begin()+i, plan.begin()+i+a1_skip);
+							send_msg_to_agent(this->time, sender, msg);
+							plan.erase(plan.begin()+i, plan.begin()+i+a1_skip+1);
 							plan.insert(plan.begin()+i, conflict_plan[0].begin(), conflict_plan[0].end());
-							
-							msg.type = MSG_TYPE_CHECK_AGAIN;
-							broadcast_msg(msg);
-							conflicts_with_other = vector<bool>(n_agents, true);
-							conflicts_with_other[this->agent_id] = false;
-							finished = vector<bool>(n_agents, false);
 
-							msg.type = MSG_TYPE_NEXT_ACTION;
-							msg.next_action = next_action;
-							broadcast_msg(msg);
+							msg.type = MSG_TYPE_CHECK_AGAIN;
+							for (int agent = 0; agent < n_agents; agent++) {
+								if (agent == agent_id || agent == sender) {
+									continue;
+								}
+								send_msg_to_agent(this->time, agent, msg);
+							}
+							goto plan_loop;
 						}
+						break;
+
+					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
+							cerr << "MSG conflict resolved" << endl;
+							plan.erase(plan.begin()+i, plan.begin()+i+msg.conflict_resolved.skip+1);
+							plan.insert(plan.begin()+i, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
+							goto plan_loop;
 						break;
 
 					case MSG_TYPE_CHECK_AGAIN:
 						conflicts_with_other = vector<bool>(n_agents, true);
 						conflicts_with_other[this->agent_id] = false;
 						finished = vector<bool>(n_agents, false);
+
+						msg.agent_id = this->agent_id;
+						msg.type = MSG_TYPE_NEXT_ACTION;
+						msg.next_action = next_action;
+						broadcast_msg(this->time, msg);
 						break;
 					}
-				} else {
-					sleep(0.3);
-					comm_loop = false;
+
+				} else { // No messages
+					step_finished = true;
 					for (bool f : finished) {
 						if (!f) {
-							comm_loop = true;
+							step_finished = false;
+							sleep(0.3);
 							break;
 						}
 					}
-					//cerr << "Agent " << agent_id << " loop: " << comm_loop << endl;
 				}
 			} // Communication loop
 
 			update_position(next_action);
-			i++;
+			this->time++;
 			this->final_plan.push_back(next_action);
-
-			//if (world.update_position(agent_id, time, next_action, state)) {
-			//	i++;
-			//	this->final_plan.push_back(next_action);
-			//	state = state->apply_action(next_action);
-			//	//cerr << state->repr();
-			//}
-			//else {
-			//	cerr << "Conflict!!!" << endl;
-			//	//assert(0);
-			//	this->final_plan.push_back(actions[0]);
-			//}
+			cerr << "AVANZANDO " << agent_id << " time " << time<< endl;
 		}
 	}
 }
@@ -405,42 +415,11 @@ umap_t BdiAgent::get_current_map()
 	return result;
 }
 
-// bool BdiAgent::check_conflict(CAction next_action)
-// {
-// 	vector<CAction> actions;
-// 	assert(!pthread_mutex_lock(&next_actions_mtx));
-// 	actions = next_actions;
-// 	assert(!pthread_mutex_unlock(&next_actions_mtx));
-//
-// 	for (int i = 0; i < actions.size(); i++) {
-// 		if (i == this->agent_id)
-// 			continue;
-//
-// 		if (next_action.conflicts(actions[i])) {
-// 			assert(!pthread_mutex_lock(&conflicts_mtx));
-// 			conflicts[this->agent_id] = true;
-// 			assert(!pthread_mutex_unlock(&conflicts_mtx));
-// 			return true;
-// 		}
-// 	}
-// 	assert(!pthread_mutex_lock(&conflicts_mtx));
-// 	if (conflicts[this->agent_id]) {
-// 		conflicts[this->agent_id] = false;
-// 	}
-// 	no_more_conflicts = true;
-// 	for(bool conflict : conflicts) {
-// 		if (conflict) {
-// 			no_more_conflicts = false;
-// 			break;
-// 		}
-// 	}
-// 	assert(!pthread_mutex_unlock(&conflicts_mtx));
-// 	return false;
-// }
-
 void BdiAgent::update_position(CAction action)
 {
 	assert(!pthread_mutex_lock(&world_mtx));
+	if (this->time > current_time)
+		current_time++;
 	if (current_time == world.size()) {
 		world.push_back(world.back());
 	}

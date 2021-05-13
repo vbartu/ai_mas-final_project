@@ -39,13 +39,6 @@ class BdiAgent {
 		static vector<umap_t> world;
 		static int current_time;
 		static pthread_mutex_t world_mtx;
-		static vector<bool> conflicts;
-		static bool no_more_conflicts;
-		static pthread_mutex_t conflicts_mtx;
-
-		static vector<bool> finished;
-		static pthread_mutex_t finished_mtx;
-
 
 		int agent_id;
 		int time;

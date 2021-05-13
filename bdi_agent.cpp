@@ -12,11 +12,6 @@ using namespace std;
 vector<umap_t> BdiAgent::world;
 int BdiAgent::current_time = 0;
 pthread_mutex_t BdiAgent::world_mtx = PTHREAD_MUTEX_INITIALIZER;
-vector<bool> BdiAgent::conflicts;
-bool BdiAgent::no_more_conflicts = false;
-pthread_mutex_t BdiAgent::conflicts_mtx = PTHREAD_MUTEX_INITIALIZER;
-vector<bool> BdiAgent::finished;
-pthread_mutex_t BdiAgent::finished_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 
 BdiAgent::BdiAgent(int agent_id)
@@ -155,6 +150,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 
 void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_inc, int* a2_inc)
 {
+#if 1
 	for (int i = 0; i < a1.size(); i++) {
 		for (int j = 0; j < a2.size() && j <= i; j++) {
 			if (!a1[i].conflicts_goal(a2[j])) {
@@ -164,6 +160,17 @@ void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_in
 			}
 		}
 	}
+#else
+	for (int i = a1.size()-1; i >= 0; i--) {
+		for (int j = a2.size()-1; j >= 0; j--) {
+			if (!a1[i].conflicts_goal(a2[j])) {
+				*a1_inc = i;
+				*a2_inc = j;
+				return;
+			}
+		}
+	}
+#endif
 }
 
 ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
@@ -230,6 +237,7 @@ void BdiAgent::run()
 	while (true) {
 		believes = this->get_current_map();
 		intention = this->get_next_goal(believes);
+		cerr << "Next goal Agent "<< agent_id<< ": " << intention.type << " (" << intention.row << ", " << intention.col << ")" << endl;
 
 		vector<CAction> plan;
 		if (intention.type == NO_GOAL) {
@@ -267,13 +275,13 @@ void BdiAgent::run()
 			while (!step_finished) { // Communication loop
 				if (get_msg(this->time, this->agent_id, &msg)) {
 					int sender = msg.agent_id;
-					cerr << "Agent " << this->agent_id << ": MSG (" << sender << ") type " << msg.type << endl;
+					//cerr << "Agent " << this->agent_id << ": MSG (" << sender << ") type " << msg.type << endl;
 
 					switch (msg.type) {
 
 					case MSG_TYPE_NEXT_ACTION:
 						if (next_action.conflicts(msg.next_action)) {
-							cerr << "Agent " << agent_id << " CONFLICT!!!!! from " << sender << " time : " << this->time << endl;
+							//cerr << "Agent " << agent_id << " CONFLICT!!!!! from " << sender << " time : " << this->time << endl;
 							vector<CAction> next_actions;
 							for (int j = i; j < plan.size() && j < i+3; j++) {
 								next_actions.push_back(plan[j]);
@@ -319,7 +327,6 @@ void BdiAgent::run()
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:
-						//cerr << "A "<< agent_id << " FINISHED from " << sender << endl;
 						finished[sender] = true;
 						break;
 
@@ -368,7 +375,7 @@ void BdiAgent::run()
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
-							cerr << "MSG conflict resolved" << endl;
+							//cerr << "MSG conflict resolved" << endl;
 							plan.erase(plan.begin()+i, plan.begin()+i+msg.conflict_resolved.skip+1);
 							plan.insert(plan.begin()+i, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 							goto plan_loop;
@@ -401,7 +408,6 @@ void BdiAgent::run()
 			update_position(next_action);
 			this->time++;
 			this->final_plan.push_back(next_action);
-			cerr << "AVANZANDO " << agent_id << " time " << time<< endl;
 		}
 	}
 }

@@ -110,10 +110,11 @@ AgentState* AgentState::apply_action(Action action) {
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
 		// Copy box to new cell, the delete it from the old one
-		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
+		char box = copy_boxes[box_row][box_col];
+		copy_boxes[box_dst_row][box_dst_col] = box;
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
-			{box_row, box_col}, copy_boxes[box_row][box_col]);
+			{box_row, box_col}, box);
 	} else if (action.type == ActionType::PULL) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -123,10 +124,11 @@ AgentState* AgentState::apply_action(Action action) {
 		int box_dst_row = box_row + action.brd;
 		int box_dst_col = box_col + action.bcd;
 		// Copy box to new cell, the delete it from the old one
-		copy_boxes[box_dst_row][box_dst_col] = copy_boxes[box_row][box_col];
+		char box = copy_boxes[box_row][box_col];
+		copy_boxes[box_dst_row][box_dst_col] = box;
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
-			{box_row, box_col}, copy_boxes[box_row][box_col]);
+			{box_row, box_col}, box);
 	}
 
 	AgentState* copy_state;

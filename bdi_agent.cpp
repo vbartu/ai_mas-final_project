@@ -150,7 +150,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 
 void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_inc, int* a2_inc)
 {
-#if 1
+#if 0
 	for (int i = 0; i < a1.size(); i++) {
 		for (int j = 0; j < a2.size() && j <= i; j++) {
 			if (!a1[i].conflicts_goal(a2[j])) {

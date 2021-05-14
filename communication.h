@@ -10,39 +10,34 @@ typedef enum msg_type_t {
 	MSG_TYPE_STEP_FINISHED,
 	MSG_TYPE_CONFLICT_AGENTS,
 	MSG_TYPE_CONFLICT_AGENTS_RESOLVED,
+	MSG_TYPE_CONFLICT_BOX,
+	MSG_TYPE_CONFLICT_BOX_RESOLVED,
 	MSG_TYPE_CHECK_AGAIN,
 } msg_type_t;
 
-
-typedef enum conflict_type_t {
-	CONFLICT_TYPE_TWO_AGENTS,
-	CONFLICT_TYPE_BOX_IN_THE_WAY,
-} conflict_type_t;
-
-typedef struct msg_info_conflict_t {
-	conflict_type_t conflict_type;
-	goal_type_t goal_type;
-	//int sequence_number;
+typedef struct conflict_agents_t {
 	vector<CAction> next_actions;
-} msg_info_conflict_t;
+} conflict_agents_t;
 
 typedef struct conflict_agents_resolved_t {
 	int skip;
 	vector<CAction> new_actions;
 } conflict_agents_resolved_t;
 
-typedef union msg_params_t {
-	//CAction next_action;
-	//msg_info_conflict_t conflict;
-} msg_params_t;
+typedef struct conflict_box_t {
+	coordinates_t box_pos;
+	vector<CAction> next_actions;
+} conflict_box_t;
+
 
 typedef struct msg_t {
 	msg_type_t type;
 	int agent_id;
 	int time;
 	CAction next_action;
-	msg_info_conflict_t conflict;
+	conflict_agents_t conflict;
 	conflict_agents_resolved_t conflict_resolved;
+	conflict_box_t conflict_box;
 } msg_t;
 
 void send_msg_to_agent(int time, int dst_agent_id, msg_t msg);

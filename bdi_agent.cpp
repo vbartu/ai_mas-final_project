@@ -20,6 +20,29 @@ BdiAgent::BdiAgent(int agent_id)
 	this->agent_id = agent_id;
 }
 
+coordinates_t get_nearest_adjacent(coordinates_t box_pos, coordinates_t agent_pos)
+{
+	int row_delta[4] = {-1, 0, 0, 1};
+	int col_delta[4] = {0, -1, 1, 0};
+	coordinates_t result = {-1, -1};
+	int dist = 10000;
+	for (int i = 0; i < 4; i++) {
+		coordinates_t adj_pos = {
+			box_pos.x + row_delta[i],
+			box_pos.y + col_delta[i]
+		};
+		if (walls[adj_pos.x][adj_pos.y]) {
+			continue;
+		} else {
+			if (distance_map[box_pos][agent_pos] < dist) {
+				result = adj_pos;
+				dist = distance_map[box_pos][agent_pos];
+			}
+		}
+	}
+	return result;
+}
+
 goal_t BdiAgent::get_next_goal(umap_t believes) {
 
 	// Get agent position
@@ -97,17 +120,12 @@ goal_t BdiAgent::get_next_goal(umap_t believes) {
 
 		for (auto box_it : believes) {
 			if (box_it.second == goal_obj) {
-				for (int i = 0; i < 4; i++) {
-					int adj_row = box_it.first.x + row_delta[i];
-					int adj_col = box_it.first.y + col_delta[i];
-					if (!walls[adj_row][adj_col]) {
-						return (goal_t) {
-							FIND_BOX,
-							adj_row,
-							adj_col,
-						};
-					}
-				}
+				coordinates_t adj_pos = get_nearest_adjacent(box_it.first, agent_coord);
+				return (goal_t) {
+					FIND_BOX,
+					adj_pos.x,
+					adj_pos.y,
+				};
 			}
 		}
 	}
@@ -223,6 +241,22 @@ ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 }
 
 
+bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
+{	
+	if (action.type == ActionType::MOVE || action.type == ActionType::PULL) {
+		if (believes.count(action.agent_final)) {
+			*box_pos = action.agent_final;
+			return true;
+		}
+	} else if (action.type == ActionType::PUSH) {
+		if (believes.count(action.box_final)) {
+			*box_pos = action.box_final;
+			return true;
+		}
+	}
+	return false;
+}
+
 /** Conflicts:
  * AGent vs Agent: compute new plan
  * Agent vs box: ask agent to move it
@@ -259,17 +293,34 @@ void BdiAgent::run()
 
 			
 			vector<bool> conflicts_with_other(n_agents, true);
-			conflicts_with_other[this->agent_id] = false; // CHECK boxes
 			vector<bool> finished(n_agents, false);
 			vector<bool> noop_ops(n_agents, false);
+
 			if (next_action.type == ActionType::NOOP)
 				noop_ops[this->agent_id] = true;
 
 			msg_t msg;
-			msg.agent_id = this->agent_id;
-			msg.type = MSG_TYPE_NEXT_ACTION;
-			msg.next_action = next_action;
-			broadcast_msg(this->time, msg);
+			coordinates_t box_pos;
+			believes = this->get_current_map();
+			if (box_conflict(next_action, believes, &box_pos)) {
+				cerr << "BOX COLLISION" << endl;
+				msg.agent_id = this->agent_id;
+				msg.type = MSG_TYPE_CONFLICT_BOX;
+				msg.conflict_box = {box_pos, vector<CAction>(plan.begin()+i, plan.end())};
+				for (int agent = 0; agent < n_agents; i++) {
+					if (get_color(agent) == get_color(believes[box_pos])) {
+							send_msg_to_agent(this->time, agent, msg);
+							break;
+					}
+				}
+				broadcast_msg(this->time, msg);
+			} else {
+				conflicts_with_other[this->agent_id] = false; // CHECK boxes
+				msg.agent_id = this->agent_id;
+				msg.type = MSG_TYPE_NEXT_ACTION;
+				msg.next_action = next_action;
+				broadcast_msg(this->time, msg);
+			}
 
 			bool step_finished = false;
 			while (!step_finished) { // Communication loop
@@ -289,7 +340,6 @@ void BdiAgent::run()
 							msg.agent_id = this->agent_id;
 							msg.type = MSG_TYPE_CONFLICT_AGENTS;
 							msg.conflict = {
-									.goal_type = intention.type,
 									.next_actions = next_actions,
 								};
 							send_msg_to_agent(this->time, sender, msg);
@@ -324,10 +374,6 @@ void BdiAgent::run()
 								broadcast_msg(this->time, msg);
 							}
 						}
-						break;
-
-					case MSG_TYPE_STEP_FINISHED:
-						finished[sender] = true;
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS:
@@ -375,11 +421,15 @@ void BdiAgent::run()
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
-							//cerr << "MSG conflict resolved" << endl;
 							plan.erase(plan.begin()+i, plan.begin()+i+msg.conflict_resolved.skip+1);
 							plan.insert(plan.begin()+i, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 							goto plan_loop;
 						break;
+
+					case MSG_TYPE_STEP_FINISHED:
+						finished[sender] = true;
+						break;
+
 
 					case MSG_TYPE_CHECK_AGAIN:
 						conflicts_with_other = vector<bool>(n_agents, true);

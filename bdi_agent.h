@@ -21,8 +21,7 @@ typedef enum goal_type_t {
 
 typedef struct goal_t {
 	goal_type_t type;
-	int row;
-	int col;
+	coordinates_t pos;
 } goal_t;
 
 
@@ -48,16 +47,24 @@ class BdiAgent {
 
 
 		goal_t get_next_goal(umap_t believes);
+		goal_t get_next_help_goal(coordinates_t agent_pos, coordinates_t box_pos);
+
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
+		AgentState* help_intention_to_state(umap_t believes, goal_t intention,
+				coordinates_t agent_pos, coordinates_t box_pos, coordinates goal_box_pos)
+		AgentState* conflict_box_to_state(umap_t believes, vector<CAction> action)
+
 		ConflictState* conflict_to_state(umap_t believes, char other_id,
 				CAction action, CAction other_action);
-
-
 
 		umap_t get_current_map();
 		void set_next_action(CAction action);
 		bool check_conflict(CAction next_action);
 		void update_position(CAction action);
+
+		vector<coordinates_t> find_neighbours(coordinates_t pos);
+		coordinates_t nearest_help_goal_cell(umap_t believes,	coordinates_t agent_pos,
+				coordinates_t box_pos, vector<CAction> other_actions);
 
 		void run();
 };

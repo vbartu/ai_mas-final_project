@@ -11,6 +11,10 @@ typedef enum msg_type_t {
 	MSG_TYPE_CONFLICT_AGENTS,
 	MSG_TYPE_CONFLICT_AGENTS_RESOLVED,
 	MSG_TYPE_CONFLICT_BOX,
+	MSG_TYPE_HELP_ACCEPTED_CONFLICT_BOX,
+	MSG_TYPE_HELP_REJECTED_CONFLICT_BOX,
+	MSG_TYPE_IN_CHARGE_REQUEST_HELP,
+	MSG_TYPE_WAITING_FOR_HELP,
 	MSG_TYPE_CONFLICT_BOX_RESOLVED,
 	MSG_TYPE_CHECK_AGAIN,
 } msg_type_t;
@@ -29,6 +33,10 @@ typedef struct conflict_box_t {
 	vector<CAction> next_actions;
 } conflict_box_t;
 
+typedef struct help_conflict_box_t {
+	int msg_id;
+} help_conflict_box_t;
+
 
 typedef struct msg_t {
 	msg_type_t type;
@@ -38,9 +46,11 @@ typedef struct msg_t {
 	conflict_agents_t conflict;
 	conflict_agents_resolved_t conflict_resolved;
 	conflict_box_t conflict_box;
+	help_conflict_box_t help_conflict_box;
 } msg_t;
 
 void send_msg_to_agent(int time, int dst_agent_id, msg_t msg);
+void send_msg_to_agents(int time vector<int> dst_agent_ids, msg_t msg)
 void broadcast_msg(int time, msg_t msg);
 bool get_msg(int time, int agent_id, msg_t* msg);
 

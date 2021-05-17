@@ -28,7 +28,7 @@ DEPS = $(OBJECTS:.o=.d)
 all: main
 	@echo "Finished: main"
 
-$(OBJ_DIR) : 
+$(OBJ_DIR) :
 	@mkdir -p $@
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(OBJ_DIR)
@@ -44,7 +44,7 @@ clean:
 	@echo "Project cleared"
 
 run: all
-	java -jar server/server.jar -c ./main -l $(LEVEL) -s 250 -g
+	java -jar server/server.jar -c ./main -l $(LEVEL) -s 250 
 
 runt: all
 	java -jar server/server.jar -c ./main -l $(LEVEL) -s 25

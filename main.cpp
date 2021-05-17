@@ -37,7 +37,7 @@ static void* agent_thread(void* args) {
 		aux.push_back(b);
 	}
 	global_result[agent_id] = aux;
-	
+
 	for (int i = agent.final_plan.size(); i < global_result.size(); i++) {
 		global_result[i].push_back(actions[0]);
 	}

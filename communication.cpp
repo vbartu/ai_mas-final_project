@@ -14,12 +14,12 @@ void send_msg_to_agent(int time, int dst_agent_id, msg_t msg)
 	assert(!pthread_mutex_unlock(&msg_queue_mtx));
 }
 
-void send_msg_to_agents(int time vector<int> dst_agent_ids, msg_t msg)
+void send_msg_to_agents(int time, vector<int> dst_agent_ids, msg_t msg)
 {
 	msg.time = time;
 	assert(!pthread_mutex_lock(&msg_queue_mtx));
 	for (int agent : dst_agent_ids) {
-		msg_queue[agent].push(msg)
+		msg_queue[agent].push(msg);
 	}
 	assert(!pthread_mutex_unlock(&msg_queue_mtx));
 }

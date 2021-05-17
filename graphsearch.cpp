@@ -27,7 +27,7 @@ vector<CAction> search(AgentState* initial_state) {
 
 		iterations += 1;
 		if (iterations % 10000 == 0) {
-			fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			// fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
 		}
 
 
@@ -70,7 +70,7 @@ vector<vector<CAction>> conflict_search(ConflictState* initial_state) {
 
 		iterations += 1;
 		if (iterations % 10000 == 0) {
-			fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			// fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
 		}
 
 
@@ -95,10 +95,10 @@ vector<vector<CAction>> conflict_search(ConflictState* initial_state) {
 	}
 }
 
-vector<CAction> conflic_box_search(AgentState* mini_map) {
+vector<CAction> conflict_box_search(AgentState* conflict_box_state) {
 	int iterations = 0;
 	FrontierBFS frontier;
-	frontier.add(initial_state);
+	frontier.add(conflict_box_state);
 	unordered_set<AgentState*, HashHelper, EqualHelper> explored;
 
 	while (true) {
@@ -113,7 +113,7 @@ vector<CAction> conflic_box_search(AgentState* mini_map) {
 
 		iterations += 1;
 		if (iterations % 10000 == 0) {
-			fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			// fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
 		}
 
 

@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <deque>
 
 #include "bdi_agent.h"
 #include "graphsearch.h"
@@ -18,6 +19,7 @@ BdiAgent::BdiAgent(int agent_id)
 {
 	this->time = 0;
 	this->agent_id = agent_id;
+	this->waiting_for_agent = false;
 }
 
 coordinates_t get_nearest_adjacent(coordinates_t box_pos, coordinates_t agent_pos)
@@ -58,8 +60,8 @@ vector<coordinates_t> find_neighbours(coordinates_t pos)
 	return result;
 }
 
-coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t agent_pos,
-	coordinates_t box_pos, vector<CAction> other_actions)
+coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t box_pos,
+	vector<CAction> other_actions)
 {
 	vector<coordinates_t> neighbours = find_neighbours(box_pos);
 	for (int j = 0; j < neighbours.size(); j++)
@@ -94,28 +96,6 @@ coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t ag
 		}
 	}
 	return (coordinates_t) {-1,-1};
-}
-
-
-goal_t BdiAgent::get_next_help_goal(coordinates_t agent_pos, coordinates_t box_pos,
-		coordinates_t goal_box_pos, coordinates_t *adj_pos)
-{
-	// Check if agent is next that box
-	bool agent_adj = false;
-	int row_delta[4] = {-1, 0, 0, 1};
-	int col_delta[4] = {0, -1, 1, 0};
-	for (int i = 0; i < 4; i++) {
-		if (agent_pos.x + row_delta[i] == box_pos.x
-				&& agent_pos.y + col_delta[i] == box_pos.y) {
-			*adj_pos = agent_pos;
-			return (goal_t) {CARRY_BOX_TO_GOAL, goal_box_pos};
-		}
-	}
-
-	// Get agent position
-	coordinates_t adjacent_pos = get_nearest_adjacent(box_pos, agent_pos);
-	*adj_pos = adjacent_pos;
-	return (goal_t) {FIND_BOX, adjacent_pos};
 }
 
 AgentState* BdiAgent::help_intention_to_state(umap_t believes, goal_t intention,
@@ -252,6 +232,8 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 		goal[intention.pos.x][intention.pos.y] = (char)(this->agent_id) + '0';
 	} else if (intention.type == CARRY_BOX_TO_GOAL) {
 		goal[intention.pos.x][intention.pos.y] = goals_map[{intention.pos.x, intention.pos.y}];
+	} else if (intention.type == HELP_MOVE_BOX) {
+		goal[intention.pos.x][intention.pos.y] = 'B';
 	} else if (intention.type == FIND_BOX) {
 		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
 	} else {
@@ -263,7 +245,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 
 void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_inc, int* a2_inc)
 {
-#if 0
+#if 0 // first free cell
 	for (int i = 0; i < a1.size(); i++) {
 		for (int j = 0; j < a2.size() && j <= i; j++) {
 			if (!a1[i].conflicts_goal(a2[j])) {
@@ -273,7 +255,7 @@ void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_in
 			}
 		}
 	}
-#else
+#else // last free cell (usually smaller solution, maybe fails?
 	for (int i = a1.size()-1; i >= 0; i--) {
 		for (int j = a2.size()-1; j >= 0; j--) {
 			if (!a1[i].conflicts_goal(a2[j])) {
@@ -336,118 +318,96 @@ ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 
 bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
 {
-	// to change: check if that box is currently carried by its box
+
+	bool is_box = false;
  	if (action.type == ActionType::MOVE || action.type == ActionType::PULL) {
 		if (believes.count(action.agent_final)) {
 			*box_pos = action.agent_final;
-			return true;
+			is_box = true;
 		}
 	} else if (action.type == ActionType::PUSH) {
 		if (believes.count(action.box_final)) {
 			*box_pos = action.box_final;
-			return true;
+			is_box = true;
 		}
 	}
-	return false;
+
+	if (is_box) {
+		vector<coordinates_t> neighbours = find_neighbours(*box_pos);
+		for (auto n : neighbours) {
+			if (believes.count(n) && believes[n] >= '0' && believes[n] <= '9'
+					&& get_color(believes[n]) == get_color(believes[*box_pos])) {
+				is_box = false;
+				break;
+			}
+		}
+	}
+
+	return is_box;
 }
 
-goal_t BdiAgent::get_next_conflict_box_goal(vector<CAction> actions)
+bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t box_pos)
 {
-	goal_t intention;
-	if (actions[0].type == ActionType::MOVE) {
-		intention.type = AGENT_GOAL;
-		intention.pos = actions[1].agent_final;
-	}
-	else if (actions[0].type == ActionType::PUSH
-				|| actions[0].type == ActionType::PULL) {
-		intention.type = CARRY_BOX_TO_GOAL;
-		intention.pos = actions[1].box_final;
-	}
-	return intention;
-}
-
-AgentState* BdiAgent::conflict_box_to_state(CAction action, goal_t intention, coordinates_t box_pos)
-{
-	int agent_row = action.agent_pos.x;
-	int agent_col = action.agent_pos.y;
+	vector<CAction> next_actions(plan.begin()+plan_index, plan.end());
+	int agent_row = next_actions[0].agent_pos.x;
+	int agent_col = next_actions[0].agent_pos.y;
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
-	vector<vector<char>> goal(n_rows, vector<char>(n_cols, ' '));
+	vector<vector<char>> goals(n_rows, vector<char>(n_cols, ' '));
 
-	if (actions[0].type == ActionType::PUSH
-		|| actions[0].type == ActionType::PULL) {
-			boxes[action.box_pos.x][action.box_pos.y] = action.box;
+	if (next_actions[0].type == ActionType::PUSH
+		|| next_actions[0].type == ActionType::PULL) {
+			boxes[next_actions[0].box_pos.x][next_actions[0].box_pos.y] = next_actions[0].box;
 	}
 
-	boxes[box_pos.x][box_pos.y] = '+';
-	goal[box_pos.x][box_pos.y] = '+';
+	boxes[box_pos.x][box_pos.y] = believes[box_pos];
+	for (auto& it : believes) {
+		if (equal(it.first, {agent_row, agent_col}))
+			continue;
+		char obj = it.second;
+		boxes[it.first.x][it.first.y] = obj;
+		if (is_box(obj) && get_color(this->agent_id) == get_color(obj)
+				&& goals_map.count(it.first) && goals_map[it.first] == obj) {
+			goals[it.first.x][it.first.y] = obj;
+		}
+	}
 
-	if (intention.type == AGENT_GOAL)
-		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
-	else if (intention.type == CARRY_BOX_TO_GOAL)
-		goal[intention.pos.x][intention.pos.y] = action.box;
-	else {
-		cerr << "Not yet implented!!!" << endl;	}
-	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
+	bool from_scratch = true;
+	vector<CAction>::iterator erase_actions_until;
+	for (int i = 1; i < next_actions.size(); i++) {
+		if (equal(next_actions[i].agent_final, box_pos)
+				|| equal(next_actions[i].box_final, box_pos)) {
+			continue;
+		}
+		erase_actions_until = plan.begin()+plan_index+i+1;
+		goals[next_actions[i].agent_final.x][next_actions[i].agent_final.y] = agent_id + '0';
+		goals[next_actions[i].box_final.x][next_actions[i].box_final.y] = next_actions[i].box;
+		from_scratch = false;
+		break;
+	}
+	if (from_scratch) {
+		if (intention.type == AGENT_GOAL) {
+			goals[intention.pos.x][intention.pos.y] = (char)(this->agent_id) + '0';
+		} else if (intention.type == CARRY_BOX_TO_GOAL) {
+			goals[intention.pos.x][intention.pos.y] = goals_map[{intention.pos.x, intention.pos.y}];
+		} else if (intention.type == FIND_BOX) {
+			goals[intention.pos.x][intention.pos.y] = this->agent_id + '0';
+		}
+		erase_actions_until = plan.end();
+	}
 
-	// int dim = 9;
-	// int half_dim = dim/2;
-	// vector<vector<char>> mini_map(dim, vector<char>(dim, ' '));
-	// vector<vector<char>> conflict_goals(dim, vector<char>(dim, ' '));
-	//
-	// umap_t belives_copy = believes;
-	// belives_copy[box_pos] = '+';
-	// // create a map of 7x7 around you
-	// for (int i = -half_dim; i <= half_dim; i++) {
-	// 	for (int j = -half_dim; j <= half_dim; j++) {
-	// 		coordinates_t cell = {agent_row + i, agent_col +j};
-	// 		if (i == -half_dim || i == half_dim
-	// 				|| j == -half_dim || j == half_dim)
-	// 			mini_map[i+half_dim][j+half_dim] = '+';
-	// 		else
-	// 		{
-	// 			if (belives_copy.count(cell)) {
-	// 				mini_map[i+half_dim][j+half_dim] = belives_copy[cell];
-	// 			}
-	// 			else {
-	// 				if (cell.x <= 0 || cell.x >= n_rows
-	// 						|| cell.y <= 0 || cell.y >= n_cols)
-	// 					mini_map[i+half_dim][j+half_dim] = '+';
-	// 				else
-	// 					if (walls[cell.x][cell.y])
-	// 						mini_map[i+half_dim][j+half_dim] = '+';
-	// 					else
-	// 						mini_map[i+half_dim][j+half_dim] = ' ';
-	// 			}
-	// 		}
-	// 	}
-	// }
+	AgentState* state = new AgentState(agent_id, agent_row, agent_col, boxes, goals);
 
-	// for (int i = 0; i < action.size(); i++) {
- 	// 	coordinates_t a1 = action[i].agent_final;
-	// 	cerr << i << " " << action[i].agent_final.x << "  " << action[i].agent_final.y << endl;
-	// 	if (! walls[a1.x][a1.y] && ! belives_copy[a1]) {
-	// 		cerr << "here " << i << endl;
-	// 		conflict_goals[a1.x][a1.y] = this->agent_id + '0';
-	// 		if (action[i].type == ActionType::PUSH
-	// 				|| action[i].type == ActionType::PULL) {
-	// 			coordinates_t b1 = action[i].box_final;
-	// 			if (! walls[a1.x][a1.y] && ! belives_copy[b1]) {
-	// 				conflict_goals[b1.x][b1.y] = action[i].box;
-	// 				*a1_inc = i;
-	// 				return new AgentState(this->agent_id, agent_row, agent_col, mini_map, conflict_goals);
-	// 			}
-	// 			else {
-	// 				conflict_goals[a1.x][a1.y] = ' ';
-	// 				continue;
-	// 			}
-	// 		}
-	// 	else {
-	// 		*a1_inc = i;
-	// 		return new AgentState(this->agent_id, agent_row, agent_col, mini_map, conflict_goals);
-	// 		}
-	// 	}
-	// }
-	// return new AgentState(this->agent_id, agent_row, agent_col, mini_map, conflict_goals);
+	cerr << state->repr();
+	vector<CAction> around_plan = search(state);
+
+	if (!around_plan.empty()) {
+		for (int a = 0; a < around_plan.size(); a++)
+			cerr << around_plan[a].name << endl;
+		plan.erase(plan.begin()+plan_index, erase_actions_until);
+		plan.insert(plan.begin()+plan_index, around_plan.begin(), around_plan.end());
+		return true;
+	}
+	return false;
 }
 
 /** Conflicts:
@@ -458,15 +418,27 @@ AgentState* BdiAgent::conflict_box_to_state(CAction action, goal_t intention, co
 void BdiAgent::run()
 {
 	umap_t believes;
-	goal_t intention;
+	deque<goal_t> intentions(1, {NO_GOAL, {-1,-1}});
 	bool waiting_for_help = false;
 
 	while (true) {
 		believes = this->get_current_map();
-		intention = this->get_next_goal(believes);
 
-		vector<CAction> plan;
+		if (intentions.front().type == HELP_MOVE_BOX) {
+			msg_t msg;
+			msg.type = MSG_TYPE_CONFLICT_BOX_RESOLVED;
+			msg.agent_id = this->agent_id;
+			send_msg_to_agent(this->time, this->helping_agent, msg);
+		}
+		intentions.pop_front();
+		if (!intentions.size()) {
+			intentions.push_back(get_next_goal(believes));
+		}
+		goal_t intention = intentions.front();
+
+		plan.clear();
 		if (intention.type == NO_GOAL) {
+			if (n_agents == 1) return;
 			plan.push_back(CAction(actions[0], {intention.pos.x, intention.pos.y}));
 		} else {
 			AgentState* state = this->intention_to_state(believes, intention);
@@ -474,16 +446,15 @@ void BdiAgent::run()
 			plan = search(state);
 			cerr << "Plan result size: " << plan.size() << endl;
 		}
-		for (int a = 0; a < plan.size(); a++)
-			cerr << plan[a].name.c_str() << '\t';
-		cerr << endl;
-
-		for (int i = 0; i < plan.size(); i++) {
-			plan_loop:
-			CAction next_action = plan[i];
+		//for (int a = 0; a < plan.size(); a++)
+			//cerr << plan[a].name.c_str() << '\t';
+		for (plan_index = 0; plan_index < plan.size(); plan_index++) {
+plan_loop:
+			CAction next_action = plan[plan_index];
 			this->time;
-			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\n", agent_id, time,
-				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y);
+			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
+				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y,
+				plan.size());
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);
@@ -496,248 +467,72 @@ void BdiAgent::run()
 			coordinates_t box_pos;
 			believes = this->get_current_map();
 
-			// cerr << " !!!! next action agent " << this->agent_id << " pose : " << next_action.agent_pos.x << " " << next_action.agent_pos.y  <<endl;
-
-			if (box_conflict(next_action, believes, &box_pos))
-			{
-				cerr << this->agent_id << " BOX COLLISION" << endl;
-				cerr << this->agent_id << " TRYING TO AVOID.." << endl;
-				vector<CAction> next_actions;
-				for (int j = i; j < plan.size() && j < i+2; j++) {
-					next_actions.push_back(plan[j]);
-				}
-				// Try to avoid the box
-				goal_t conflict_box_intention = get_next_conflict_box_goal(next_actions);
-				AgentState* conflict_box_state = conflict_box_to_state(next_actions[0], conflict_box_intention, box_pos);
-				cerr << conflict_box_state->repr();
-				vector<CAction> conflict_box_plan = conflict_box_search(conflict_box_state);
-				for (int a = 0; a < conflict_box_plan.size(); a++)
-					cerr << conflict_box_plan[a].name.c_str() << '\t';
-				cerr << endl;
-				// cerr << " plan: " << conflict_box_plan.size() << endl;
-				if (!conflict_box_plan.empty()) {
-					plan.erase(plan.begin()+i, plan.begin()+i+1);
-					plan.insert(plan.begin()+i, conflict_box_plan.begin(), conflict_box_plan.end());
-					for (int a = 0; a < plan.size(); a++)
-						cerr << plan[a].name.c_str() << '\t';
-					cerr << endl;
-
+			// Box conflict
+			if (box_conflict(next_action, believes, &box_pos) && !waiting_for_agent) {
+				if (try_around_box(believes, intention, box_pos)) {
 					goto plan_loop;
 				}
-				else	{
+				else {
 					cerr << this->agent_id << " SENDING MESSAGES TO BOX-AGENTS.." << endl;
 					vector<CAction> next_actions;
-					for (int j = i; j < plan.size() && j < i+5; j++) {
+					for (int j = plan_index; j < plan.size() && j < plan_index+5; j++) {
 						next_actions.push_back(plan[j]);
 					}
 					msg.agent_id = this->agent_id;
 					msg.type = MSG_TYPE_CONFLICT_BOX;
-					msg.conflict_box = {
-						.box_pos = box_pos,
-						.next_actions = next_actions,
-					};
-					for (int agent = 0; agent < n_agents; i++) {
+					msg.conflict_box = {box_pos, next_actions};
+					for (int agent = 0; agent < n_agents; agent++) {
 						if (get_color(agent) == get_color(believes[box_pos])) {
 								send_msg_to_agent(this->time, agent, msg);
 								break;
 						}
 					}
-					plan.insert(plan.begin() + i, CAction(actions[0], {next_action.agent_pos.x, next_action.agent_pos.y}));
+					this->waiting_for_agent = true;
 				}
 			}
-			else
-			{
-				// cerr<< "(time " << this->time << " ) " <<"id: " << this->agent_id << " --- TOTAL PLAN SIZE --- : " << plan.size() << endl;
-				// for (int a = 0; a < plan.size(); a++) {
-				// 	cerr << plan[a].name.c_str() << '\t';
-				// }
-				cerr << endl;
-				conflicts_with_other[this->agent_id] = false; // CHECK boxes
-				msg.agent_id = this->agent_id;
-				msg.type = MSG_TYPE_NEXT_ACTION;
-				msg.next_action = next_action;
-				broadcast_msg(this->time, msg);
+
+			if (this->waiting_for_agent) {
+				plan.insert(plan.begin()+plan_index, CAction(actions[0], {next_action.agent_pos.x, next_action.agent_pos.y}));
+				next_action = plan[plan_index];
 			}
 
+			conflicts_with_other[this->agent_id] = false;
+			msg.agent_id = this->agent_id;
+			msg.type = MSG_TYPE_NEXT_ACTION;
+			msg.next_action = next_action;
+			broadcast_msg(this->time, msg);
+
 			bool step_finished = false;
-			while (!step_finished) { // Communication loop
+			while (!step_finished && n_agents > 1)
+			{ // Communication loop
 				if (get_msg(this->time, this->agent_id, &msg)) {
 					int sender = msg.agent_id;
 
 					switch (msg.type) {
 
 					case MSG_TYPE_CONFLICT_BOX:
-						if (intention.type == NO_GOAL || intention.type == AGENT_GOAL)
 						{
-							// Find the goal cell for the box
-							coordinates_t goal_box_pos = nearest_help_goal_cell(believes, next_action.agent_pos,
-								msg.conflict_box.box_pos, msg.conflict_box.next_actions);
-							cerr<< "(time " << this->time << " ) " << "id: "<<this->agent_id << "  BOX GOAL CELL :  " << goal_box_pos.x << " " << goal_box_pos.y << endl;
-
-							// Find the intention for the agent
-							coordinates_t adj_pos;
-							goal_t new_intention = this->get_next_help_goal(next_action.agent_pos, msg.conflict_box.box_pos,
-								 	goal_box_pos, &adj_pos);
-							AgentState* help_state = this->help_intention_to_state(believes, new_intention,
-									next_action.agent_pos, msg.conflict_box.box_pos);
-							cerr << help_state->repr();
-							vector<CAction> help_plan = search(help_state);
-							plan.erase(plan.begin()+i, plan.end());
-							plan.insert(plan.begin()+i, help_plan.begin(), help_plan.end());
-
-
-							msg.agent_id = this->agent_id;
-							msg.type = MSG_TYPE_HELP_ACCEPTED_CONFLICT_BOX;
-							msg.help_conflict_box = {
-								.adj_pos = adj_pos,
-								.box_pos = msg.conflict_box.box_pos,
-								.goal_box_pos = goal_box_pos,
-							};
-							send_msg_to_agent(this->time, sender, msg);
-
-							// msg.type = MSG_TYPE_CHECK_AGAIN;
-							// for (int agent = 0; agent < n_agents; agent++) {
-							// 	if (agent == agent_id || agent == sender) {
-							// 		continue;
-							// }
-							// 	send_msg_to_agent(this->time, sender, msg);
-							// }
-							goto plan_loop;
+							// Go to box intention
+							coordinates_t adjacent_pos = get_nearest_adjacent(msg.conflict_box.box_pos, plan[plan.size()-1].agent_final);
+							intentions.push_back({FIND_BOX, adjacent_pos});
+							// Move box intention
+							coordinates_t goal_box_pos = nearest_help_goal_cell(believes, msg.conflict_box.box_pos,
+								msg.conflict_box.next_actions);
+							intentions.push_back({HELP_MOVE_BOX, goal_box_pos});
+							cerr << "BOX CONFLICT SOLVED";
+							this->helping_agent = sender;
 							break;
 						}
-						// else if (intention.type == CARRY_BOX_TO_GOAL || intention.type == FIND_BOX)
-						// {
-						// 	int dist_ag_to_goal = distance_map[next_action.agent_pos][intention.pos];
-						// 	int dist_ag_to_help = distance_map[next_action.agent_pos][msg.conflict_box.box_pos];
-						// 	if (dist_ag_to_goal < dist_ag_to_help)
-						// 	{
-						// 		msg.agent_id = this->agent_id;
-						// 		msg.type = MSG_TYPE_HELP_REJECTED_CONFLICT_BOX;
-						// 		send_msg_to_agent(this->time, sender, msg);
-						//
-						// 		// msg.help_conflict_box = {
-						// 		// 	.msg_id = 0001,
-						// 		// }
-						// 		// vector<int> dst_agent_ids;
-						// 		// for (int agent = 0; agent < n_agents; i++) {
-						// 		// 	if (agent != this->agent_id && get_color(this->agent_id) == get_color(agent)) {
-						// 		// 		dst_agent_ids.push_back(agent);
-						// 		// 	}
-						// 		// }
-						// 		// if (!dst_agent_ids.empty())
-						// 		// 	send_msg_to_agents(this->time, dst_agent_ids, msg);
-						// 	}
-						// 	else
-						// 	{
-						// 		coordinates_t goal_box_pos = nearest_help_goal_cell(believes, next_action.agent_pos,
-						// 			msg.conflict_box.box_pos, msg.conflict_box.next_actions);
-						// 		coordinates_t adj_pos;
-						// 		goal_t new_intention = this->get_next_help_goal(next_action.agent_pos, msg.conflict_box.box_pos,
-						// 				goal_box_pos, &adj_pos);
-						// 		AgentState* help_state = this->help_intention_to_state(believes, new_intention,
-						// 				next_action.agent_pos, msg.conflict_box.box_pos);
-						// 		//cerr << help_state->repr();
-						// 		vector<CAction> help_plan = search(help_state);
-						// 		//cerr << "Plan result size: " << help_plan.size() << endl;
-						// 		plan.insert(plan.begin()+i, help_plan.begin(), help_plan.end());
-						//
-						// 		msg.agent_id = this->agent_id;
-						// 		msg.type = MSG_TYPE_HELP_ACCEPTED_CONFLICT_BOX;
-						// 		send_msg_to_agent(this->time, sender, msg);
-						//
-						// 		// msg.type = MSG_TYPE_IN_CHARGE_REQUEST_HELP;
-						// 		// msg.help_conflict_box = {
-						// 			// .msg_id = 0002,
-						// 		// };
-						// 		// vector<int> dst_agent_ids;
-						// 		// for (int agent = 0; agent < n_agents; i++) {
-						// 		// 	if (agent != this->agent_id && get_color(this->agent_id) == get_color(agent)) {
-						// 		// 		dst_agent_ids.push_back(agent);
-						// 		// 	}
-						// 		// }
-						// 		// if (!dst_agent_ids.empty())
-						// 		// 	send_msg_to_agents(this->time, dst_agent_ids, msg);
-						// 		goto plan_loop;
-						// 	}
-						// }
-						break;
 
-					case MSG_TYPE_HELP_ACCEPTED_CONFLICT_BOX:
-						plan.insert(plan.begin() + i, CAction(actions[0], {next_action.agent_pos.x, next_action.agent_pos.y}));
-
-						msg.agent_id = this->agent_id;
-						msg.help_conflict_box = {
-							.adj_pos = msg.help_conflict_box.adj_pos,
-							.box_pos = msg.help_conflict_box.box_pos,
-							.goal_box_pos = msg.help_conflict_box.goal_box_pos,
-						};
-						msg.type = MSG_TYPE_WAITING_FOR_YOUR_HELP;
-						send_msg_to_agent(this->time, sender, msg);
-						goto plan_loop;
-						break;
-
-					case MSG_TYPE_WAITING_FOR_YOUR_HELP:
-						cerr << "$$$$ next action agent " << this->agent_id << " pos " << next_action.agent_pos.x << " " << next_action.agent_pos.y << endl;
-						if (next_action.agent_pos.x != msg.help_conflict_box.adj_pos.x
-					 			|| next_action.agent_pos.y != msg.help_conflict_box.adj_pos.y) {
-							msg.agent_id = this->agent_id;
-							msg.help_conflict_box = {
-								.adj_pos = msg.help_conflict_box.adj_pos,
-								.box_pos = msg.help_conflict_box.box_pos,
-								.goal_box_pos = msg.help_conflict_box.goal_box_pos,
-							};
-							cerr<<"(time " << this->time << " ) " <<  "MOVING TOWARDS -- agent_id " << this->agent_id << " -> send to : " << sender<< endl;
-
-							msg.type = MSG_TYPE_HELP_ACCEPTED_CONFLICT_BOX;
-							send_msg_to_agent(this->time, sender, msg);
-							goto plan_loop;
-							// break;
-						}
-						else {
-							cerr << "(time " << this->time << " ) "<< "START MOVING BOX-- id: " << this->agent_id << endl;
-							coordinates_t adj_pos;
-							goal_t new_intention = this->get_next_help_goal(next_action.agent_pos, msg.help_conflict_box.box_pos,
-						 			msg.help_conflict_box.goal_box_pos, &adj_pos);
-
-							cerr << "(time " << this->time << " ) "<<"id: " << this->agent_id << " --- new_intention--- :  type " << new_intention.type << "  " << new_intention.pos.x << "  " << new_intention.pos.y << endl;
-							AgentState* help_state = this->help_intention_to_state(believes, new_intention,
-									next_action.agent_pos, msg.conflict_box.box_pos);
-							cerr << help_state->repr();
-							vector<CAction> help_plan = search(help_state);
-							plan.erase(plan.begin()+i, plan.end());
-							plan.insert(plan.begin()+i, help_plan.begin(), help_plan.end());
-							cerr<< "(time " << this->time << " ) " <<"id: " << this->agent_id << " --- TOTAL PLAN SIZE --- : " << plan.size() << endl;
-							for (int a = 0; a < plan.size(); a++) {
-								cerr << plan[a].name.c_str() << '\t';
-							}
-
-							msg.agent_id = this->agent_id;
-							msg.type = MSG_TYPE_MOVING_BOX_FROM_PATH;
-							send_msg_to_agent(this->time, sender, msg);
-
-							msg.type = MSG_TYPE_CHECK_AGAIN;
-							for (int agent = 0; agent < n_agents; agent++) {
-								if (agent == agent_id || agent == sender) {
-									continue;
-								}
-								send_msg_to_agent(this->time, agent, msg);
-							}
-
-							goto plan_loop;
-							// break;
-						}
-						break;
-
-					case MSG_TYPE_MOVING_BOX_FROM_PATH:
-						cerr << "(time " << this->time << " ) "<< "MOVING BOX-- id: " << this->agent_id << endl;
-						plan.insert(plan.begin() + i, CAction(actions[0], {next_action.agent_pos.x, next_action.agent_pos.y}));
-						goto plan_loop;
-						break;
+					case MSG_TYPE_CONFLICT_BOX_RESOLVED:
+							this->waiting_for_agent = false;
+							break;
 
 					case MSG_TYPE_NEXT_ACTION:
+						//cerr << "Next action msg from " << sender << endl;
 						if (next_action.conflicts(msg.next_action)) {
 							vector<CAction> next_actions;
-							for (int j = i; j < plan.size() && j < i+3; j++) {
+							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
 								next_actions.push_back(plan[j]);
 							}
 							msg.agent_id = this->agent_id;
@@ -756,7 +551,16 @@ void BdiAgent::run()
 									}
 								}
 								if (exit_aux) {
-									return;
+									bool finished = true;
+									believes = get_current_map();
+									for (auto& it : goals_map) {
+										if (believes.count(it.first) && believes[it.first] == it.second) {
+											continue;
+										}
+										finished = false;
+										break;
+									}
+									if (finished) return;
 								}
 							} else {
 								noop_ops[sender] = false;
@@ -785,7 +589,7 @@ void BdiAgent::run()
 							cerr << "Solving conflict!!!!! " << sender << " time " << this-> time << endl;
 							// Resolve conflict
 							vector<CAction> next_actions;
-							for (int j = i; j < plan.size() && j < i+3; j++) {
+							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
 								next_actions.push_back(plan[j]);
 							}
 							vector<CAction> other_actions = msg.conflict.next_actions;
@@ -809,8 +613,8 @@ void BdiAgent::run()
 								.new_actions = conflict_plan[1],
 							};
 							send_msg_to_agent(this->time, sender, msg);
-							plan.erase(plan.begin()+i, plan.begin()+i+a1_skip+1);
-							plan.insert(plan.begin()+i, conflict_plan[0].begin(), conflict_plan[0].end());
+							plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+a1_skip+1);
+							plan.insert(plan.begin()+plan_index, conflict_plan[0].begin(), conflict_plan[0].end());
 
 							msg.type = MSG_TYPE_CHECK_AGAIN;
 							for (int agent = 0; agent < n_agents; agent++) {
@@ -824,8 +628,8 @@ void BdiAgent::run()
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
-						plan.erase(plan.begin()+i, plan.begin()+i+msg.conflict_resolved.skip+1);
-						plan.insert(plan.begin()+i, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
+						plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+msg.conflict_resolved.skip+1);
+						plan.insert(plan.begin()+plan_index, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 						goto plan_loop;
 						break;
 
@@ -849,7 +653,7 @@ void BdiAgent::run()
 						for (bool f : finished) {
 							if (!f) {
 								step_finished = false;
-								sleep(1);
+								sleep(0.3);
 								break;
 						}
 					}

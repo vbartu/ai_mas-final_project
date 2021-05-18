@@ -15,6 +15,7 @@ typedef enum goal_type_t {
 	NO_GOAL,           // There is no goals for this agent
 	FIND_BOX,          // Move agent to box
 	CARRY_BOX_TO_GOAL, // If agent is next to box, move box to goal
+	HELP_MOVE_BOX,
 	AGENT_GOAL,        // If agent has goal, move agent to goal,
 } goal_type_t;
 
@@ -42,19 +43,23 @@ class BdiAgent {
 		int agent_id;
 		int time;
 		vector<CAction> final_plan;
+		vector<CAction> plan;
+		int plan_index;
+
+		bool waiting_for_agent;
+		int helping_agent;
 
 		BdiAgent(int agent_id);
 
 
 		goal_t get_next_goal(umap_t believes);
-		goal_t get_next_help_goal(coordinates_t agent_pos, coordinates_t box_pos,
-				coordinates_t goal_box_pos, coordinates_t* adj_pos);
 		goal_t get_next_conflict_box_goal(vector<CAction> actions);
 
 		AgentState* intention_to_state(umap_t believes, goal_t intention);
 		AgentState* help_intention_to_state(umap_t believes, goal_t intention,
 				coordinates_t agent_pos, coordinates_t box_pos);
-		AgentState* conflict_box_to_state(CAction action, goal_t intention, coordinates_t box_pos);
+
+		bool try_around_box(umap_t believes, goal_t intention, coordinates_t box_pos);
 
 		ConflictState* conflict_to_state(umap_t believes, char other_id,
 				CAction action, CAction other_action);
@@ -64,8 +69,8 @@ class BdiAgent {
 		bool check_conflict(CAction next_action);
 		void update_position(CAction action);
 
-		coordinates_t nearest_help_goal_cell(umap_t believes,	coordinates_t agent_pos,
-				coordinates_t box_pos, vector<CAction> other_actions);
+		coordinates_t nearest_help_goal_cell(umap_t believes, coordinates_t box_pos,
+			vector<CAction> other_actions);
 
 		void run();
 };

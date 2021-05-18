@@ -319,16 +319,16 @@ ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
 bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
 {
 
-	bool is_box = false;
+	bool is_box_coflict = false;
  	if (action.type == ActionType::MOVE || action.type == ActionType::PULL) {
-		if (believes.count(action.agent_final)) {
+		if (believes.count(action.agent_final) && is_box(believes[action.agent_final])) {
 			*box_pos = action.agent_final;
-			is_box = true;
+			is_box_coflict = true;
 		}
 	} else if (action.type == ActionType::PUSH) {
-		if (believes.count(action.box_final)) {
+		if (believes.count(action.box_final) && is_box(believes[action.box_final])) {
 			*box_pos = action.box_final;
-			is_box = true;
+			is_box_coflict = true;
 		}
 	}
 
@@ -337,13 +337,13 @@ bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
 		for (auto n : neighbours) {
 			if (believes.count(n) && believes[n] >= '0' && believes[n] <= '9'
 					&& get_color(believes[n]) == get_color(believes[*box_pos])) {
-				is_box = false;
+				is_box_coflict = false;
 				break;
 			}
 		}
 	}
 
-	return is_box;
+	return is_box_coflict;
 }
 
 bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t box_pos)
@@ -397,10 +397,11 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 
 	AgentState* state = new AgentState(agent_id, agent_row, agent_col, boxes, goals);
 
-	cerr << state->repr();
 	vector<CAction> around_plan = search(state);
 
 	if (!around_plan.empty()) {
+		cerr << "Going around" << endl;
+		cerr << state->repr();
 		for (int a = 0; a < around_plan.size(); a++)
 			cerr << around_plan[a].name << endl;
 		plan.erase(plan.begin()+plan_index, erase_actions_until);
@@ -531,6 +532,7 @@ plan_loop:
 					case MSG_TYPE_NEXT_ACTION:
 						//cerr << "Next action msg from " << sender << endl;
 						if (next_action.conflicts(msg.next_action)) {
+							cerr << "Conflict" << endl;
 							vector<CAction> next_actions;
 							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
 								next_actions.push_back(plan[j]);

@@ -530,7 +530,6 @@ plan_loop:
 							break;
 
 					case MSG_TYPE_NEXT_ACTION:
-						//cerr << "Next action msg from " << sender << endl;
 						if (next_action.conflicts(msg.next_action)) {
 							cerr << "Conflict" << endl;
 							vector<CAction> next_actions;
@@ -567,7 +566,6 @@ plan_loop:
 							} else {
 								noop_ops[sender] = false;
 							}
-
 							conflicts_with_other[sender] = false;
 							bool no_conflicts = true;
 							for (bool c : conflicts_with_other) {
@@ -577,6 +575,7 @@ plan_loop:
 								}
 							}
 							if (no_conflicts) {
+
 								finished[this->agent_id] = true;
 								msg.agent_id = this->agent_id;
 								msg.type = MSG_TYPE_STEP_FINISHED;
@@ -617,15 +616,19 @@ plan_loop:
 							send_msg_to_agent(this->time, sender, msg);
 							plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+a1_skip+1);
 							plan.insert(plan.begin()+plan_index, conflict_plan[0].begin(), conflict_plan[0].end());
+							next_action = plan[plan_index];
+
+							conflicts_with_other = vector<bool>(n_agents, true);
+							conflicts_with_other[this->agent_id] = false;
+							finished = vector<bool>(n_agents, false);
 
 							msg.type = MSG_TYPE_CHECK_AGAIN;
-							for (int agent = 0; agent < n_agents; agent++) {
-								if (agent == agent_id || agent == sender) {
-									continue;
-								}
-								send_msg_to_agent(this->time, agent, msg);
-							}
-							goto plan_loop;
+							broadcast_msg(this->time, msg);
+
+							msg.agent_id = this->agent_id;
+							msg.type = MSG_TYPE_NEXT_ACTION;
+							msg.next_action = next_action;
+							broadcast_msg(this->time, msg);
 						} else if (!next_action.conflicts(msg.conflict.next_actions[0])) {
 							cerr << "Conflict by yout part" << endl;
 							vector<CAction> next_actions;
@@ -644,7 +647,7 @@ plan_loop:
 					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
 						plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+msg.conflict_resolved.skip+1);
 						plan.insert(plan.begin()+plan_index, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
-						goto plan_loop;
+						next_action = plan[plan_index];
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:

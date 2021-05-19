@@ -119,9 +119,10 @@ int main () {
 		initial_state_lines[n_rows++] = line;
 
 		if (line.length() > n_cols)
-			n_cols = line.length() -1;
+			n_cols = line.length();
 		getline(cin, line);
 	}
+	cerr << "LEVEL SIZE: " << n_rows << ", " << n_cols << endl;
 
 
 	// Parse initial state

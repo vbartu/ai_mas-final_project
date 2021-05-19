@@ -36,9 +36,9 @@ coordinates_t get_nearest_adjacent(coordinates_t box_pos, coordinates_t agent_po
 		if (walls[adj_pos.x][adj_pos.y]) {
 			continue;
 		} else {
-			if (distance_map[box_pos][agent_pos] < dist) {
+			if (distance_map[adj_pos][agent_pos] < dist) {
 				result = adj_pos;
-				dist = distance_map[box_pos][agent_pos];
+				dist = distance_map[adj_pos][agent_pos];
 			}
 		}
 	}

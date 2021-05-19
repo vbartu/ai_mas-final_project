@@ -168,8 +168,10 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 		}
 	}
 
-	// Look for boxes not yet in their goals
+// Look for boxes not yet in their goals
 	goal_t agent_goal = {.type = NO_GOAL, agent_coord};
+	int dist = 10000;
+
 	for (auto goal_it : goals_map) {
 		coordinates_t goal_coord = goal_it.first;
 		char goal_obj = goal_it.second;
@@ -197,15 +199,27 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 		if (box_it != believes.end() && box_it->second == goal_obj) {
 			continue;
 		}
+		
+		// for (auto box_it : believes) {
+		// 	if (box_it.second == goal_obj) {
+		// 		coordinates_t adj_pos = get_nearest_adjacent(box_it.first, agent_coord);
+		// 		return (goal_t) {FIND_BOX, adj_pos};
+		// 	}
+		// }
 
 		for (auto box_it : believes) {
+			cerr << "here" <<endl;
 			if (box_it.second == goal_obj) {
-				coordinates_t adj_pos = get_nearest_adjacent(box_it.first, agent_coord);
-				return (goal_t) {FIND_BOX, adj_pos};
+				int d = distance_map[box_it.first][agent_coord];
+				if (d < dist) {
+					dist = d;
+					coordinates_t adj_pos = get_nearest_adjacent(box_it.first, agent_coord);
+					agent_goal = {FIND_BOX, adj_pos};
+				}
 			}
 		}
 	}
-	return agent_goal;
+return agent_goal;
 }
 
 AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)

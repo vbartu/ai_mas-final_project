@@ -380,7 +380,9 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 		}
 		erase_actions_until = plan.begin()+plan_index+i+1;
 		goals[next_actions[i].agent_final.x][next_actions[i].agent_final.y] = agent_id + '0';
-		goals[next_actions[i].box_final.x][next_actions[i].box_final.y] = next_actions[i].box;
+		if (!equal(next_actions[i].agent_final, next_actions[i].box_final)) {
+			goals[next_actions[i].box_final.x][next_actions[i].box_final.y] = next_actions[i].box;
+		}
 		from_scratch = false;
 		break;
 	}

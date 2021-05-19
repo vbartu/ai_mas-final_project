@@ -4,6 +4,8 @@
 
 static int goal_count(const AgentState* state);
 static int precomputed_distance(const AgentState* state);
+static int keep_near_box(const AgentState* state);
+static int avoid_goals(const AgentState* state);
 
 bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* state2) const
 {
@@ -12,8 +14,7 @@ bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* sta
 
 int HeuristicHelper::h(const AgentState* state) const
 {
-	//cerr << "P: " << precomputed_distance(state);
-	return precomputed_distance(state);
+	return precomputed_distance(state) + keep_near_box(state);
 }
 
 static int goal_count(const AgentState* state)
@@ -58,4 +59,29 @@ static int precomputed_distance(const AgentState* state)
 		}
 	}
 	return distance;
+}
+
+static int keep_near_box(const AgentState* state)
+{
+	int distance = 0;
+	coordinates_t agent_pos = {state->agent_row, state->agent_col};
+	for (int row = 0; row < n_rows; row++) {
+		for (int col = 0; col < n_cols; col++) {
+			char box = state->boxes[row][col];
+			if (is_box(box) && box == state->action.box) {
+				distance += distance_map[{row, col}][agent_pos] - 1;
+			}
+		}
+	}
+	return distance;
+}
+
+static int avoid_goals(const AgentState* state)
+{
+	int penalty = 0;
+	if (is_box(state->goal[state->action.agent_final.x][state->action.agent_final.x])
+			|| is_box(state->goal[state->action.box_final.x][state->action.box_final.x])) {
+		penalty+=2;
+	}
+	return penalty;
 }

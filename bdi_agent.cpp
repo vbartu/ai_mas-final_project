@@ -233,7 +233,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	} else if (intention.type == CARRY_BOX_TO_GOAL) {
 		goal[intention.pos.x][intention.pos.y] = goals_map[{intention.pos.x, intention.pos.y}];
 	} else if (intention.type == HELP_MOVE_BOX) {
-		goal[intention.pos.x][intention.pos.y] = 'B';
+		goal[intention.pos.x][intention.pos.y] = this->box_helping;
 	} else if (intention.type == FIND_BOX) {
 		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
 	} else {
@@ -437,6 +437,8 @@ void BdiAgent::run()
 		}
 		goal_t intention = intentions.front();
 
+		cerr << "Intention agent " << agent_id << ": " << intention.type << " (" << intention.pos.x << ", " << intention.pos.y << ")" << endl;
+
 		plan.clear();
 		if (intention.type == NO_GOAL) {
 			if (n_agents == 1) return;
@@ -447,8 +449,6 @@ void BdiAgent::run()
 			plan = search(state);
 			cerr << "Plan result size: " << plan.size() << endl;
 		}
-		//for (int a = 0; a < plan.size(); a++)
-			//cerr << plan[a].name.c_str() << '\t';
 		for (plan_index = 0; plan_index < plan.size(); plan_index++) {
 plan_loop:
 			CAction next_action = plan[plan_index];
@@ -522,6 +522,7 @@ plan_loop:
 							intentions.push_back({HELP_MOVE_BOX, goal_box_pos});
 							cerr << "BOX CONFLICT SOLVED";
 							this->helping_agent = sender;
+							this->box_helping = believes[msg.conflict_box.box_pos];
 							break;
 						}
 

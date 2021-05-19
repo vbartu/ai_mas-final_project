@@ -27,7 +27,8 @@ vector<CAction> search(AgentState* initial_state) {
 
 		iterations += 1;
 		if (iterations % 10000 == 0) {
-			// fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			//fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			//cerr << state->repr();
 		}
 
 

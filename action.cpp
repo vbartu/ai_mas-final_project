@@ -43,6 +43,17 @@ CAction::CAction(Action action, coordinates_t agent_pos)
 	this->box = 0;
 }
 
+CAction::CAction(Action action, coordinates_t agent_pos, char box)
+		: Action(action)
+{
+	this->agent_pos = agent_pos;
+	this->box_pos = agent_pos;
+	this->agent_final = add(agent_pos, {this->ard, this->acd});
+	this->box_final = this->agent_final;
+	this->box = box;
+}
+
+
 CAction::CAction(Action action, coordinates_t agent_pos, coordinates_t box_pos,
 		char box) : Action(action)
 {

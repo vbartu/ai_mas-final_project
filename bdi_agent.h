@@ -48,6 +48,7 @@ class BdiAgent {
 
 		bool waiting_for_agent;
 		int helping_agent;
+		char box_helping;
 
 		BdiAgent(int agent_id);
 

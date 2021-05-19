@@ -95,12 +95,14 @@ AgentState* AgentState::apply_action(Action action) {
     vector<vector<char>> copy_boxes(this->boxes);
 
 	if (action.type == ActionType::NOOP) {
-		completed_action = CAction(action, {this->agent_row, this->agent_col});
+		completed_action = CAction(action, {this->agent_row, this->agent_col},
+			this->action.box);
 	}
 	else if (action.type == ActionType::MOVE) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
-		completed_action = CAction(action, {this->agent_row, this->agent_col});
+		completed_action = CAction(action, {this->agent_row, this->agent_col},
+			this->action.box);
 	} else if (action.type == ActionType::PUSH) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;

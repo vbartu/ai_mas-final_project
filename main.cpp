@@ -39,7 +39,7 @@ static void* agent_thread(void* args) {
 	global_result[agent_id] = aux;
 
 	for (int i = agent.final_plan.size(); i < global_result.size(); i++) {
-		global_result[i].push_back(actions[0]);
+		global_result[i].push_back(ACTION_NOOP);
 	}
 	pthread_mutex_unlock(&global_result_mtx);
 
@@ -76,7 +76,7 @@ static void split_level(umap_t initial_map)
 	}
 	for (int i = 0; i < global_result.size(); i++) {
 		while (global_result[i].size() < max_depth) {
-			global_result[i].push_back(actions[0]);
+			global_result[i].push_back(ACTION_NOOP);
 		}
 	}
 }

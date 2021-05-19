@@ -440,7 +440,7 @@ void BdiAgent::run()
 		plan.clear();
 		if (intention.type == NO_GOAL) {
 			if (n_agents == 1) return;
-			plan.push_back(CAction(actions[0], {intention.pos.x, intention.pos.y}));
+			plan.push_back(CAction(ACTION_NOOP, {intention.pos.x, intention.pos.y}));
 		} else {
 			AgentState* state = this->intention_to_state(believes, intention);
 			cerr << state->repr();
@@ -493,7 +493,7 @@ plan_loop:
 			}
 
 			if (this->waiting_for_agent) {
-				plan.insert(plan.begin()+plan_index, CAction(actions[0], {next_action.agent_pos.x, next_action.agent_pos.y}));
+				plan.insert(plan.begin()+plan_index, CAction(ACTION_NOOP, {next_action.agent_pos.x, next_action.agent_pos.y}));
 				next_action = plan[plan_index];
 			}
 
@@ -626,6 +626,18 @@ plan_loop:
 								send_msg_to_agent(this->time, agent, msg);
 							}
 							goto plan_loop;
+						} else if (!next_action.conflicts(msg.conflict.next_actions[0])) {
+							cerr << "Conflict by yout part" << endl;
+							vector<CAction> next_actions;
+							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
+								next_actions.push_back(plan[j]);
+							}
+							msg.agent_id = this->agent_id;
+							msg.type = MSG_TYPE_CONFLICT_AGENTS;
+							msg.conflict = {
+									.next_actions = next_actions,
+							};
+							send_msg_to_agent(this->time, sender, msg);
 						}
 						break;
 
@@ -656,6 +668,7 @@ plan_loop:
 							if (!f) {
 								step_finished = false;
 								sleep(0.3);
+								//cerr << agent_id << endl;
 								break;
 						}
 					}

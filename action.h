@@ -55,4 +55,6 @@ class CAction : public Action {
 
 extern vector<Action> actions;
 
+#define ACTION_NOOP (actions[0])
+
 #endif

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <deque>
+#include <limits.h>
 
 #include "bdi_agent.h"
 #include "graphsearch.h"
@@ -103,7 +104,6 @@ coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t bo
 
 goal_t BdiAgent::get_next_goal(umap_t believes)
 {
-
 	// Get agent position
 	coordinates_t agent_coord;
 	for (auto obj_it : believes) {
@@ -125,27 +125,20 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 
 		if (believes.count(adj_coord)) {
 			char box = believes[adj_coord];
-			if (get_color(box) == get_color(this->agent_id) && is_box(box)) {
+			if (is_box(box) && get_color(box) == get_color(this->agent_id)
+					&& !(goals_map.count(adj_coord) && goals_map[adj_coord] == box)) {
 				coordinates_t goal_coord;
-				bool found = false;
 				for (auto goal_it : goals_map) {
-					if (goal_it.second == box) {
-						goal_coord = goal_it.first;
-						found = true;
-						break;
-					}
-				}
-				if (found && (adj_coord.x != goal_coord.x
-							|| adj_coord.y != goal_coord.y)) {
-					return (goal_t) {CARRY_BOX_TO_GOAL, goal_coord};
+					if (goal_it.second == box)
+						return {CARRY_BOX_TO_GOAL, goal_it.first};
 				}
 			}
 		}
 	}
 
-// Look for boxes not yet in their goals
-	goal_t agent_goal = {.type = NO_GOAL, agent_coord};
-	int dist = 10000;
+	// Look for boxes not yet in their goals
+	goal_t agent_goal = {NO_GOAL, agent_coord};
+	int dist = INT_MAX;
 
 	for (auto goal_it : goals_map) {
 		coordinates_t goal_coord = goal_it.first;
@@ -157,9 +150,7 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 		}
 
 		// Save agent goal, in case no box is left
-		if (goal_obj - '0' == this->agent_id
-				&& (goal_coord.x != agent_coord.x
-					|| goal_coord.y != agent_coord.y)) {
+		if (goal_obj - '0' == this->agent_id && !equal(goal_coord, agent_coord)) {
 			agent_goal = {AGENT_GOAL, goal_coord};
 			continue;
 		}
@@ -169,8 +160,8 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 			continue;
 		}
 
-		// Skip if box is already in goal
-		umap_t::iterator box_it = believes.find(goal_coord);
+		// Skip if goal is already ocupied by box
+		auto box_it = believes.find(goal_coord);
 		if (box_it != believes.end() && box_it->second == goal_obj) {
 			continue;
 		}
@@ -178,15 +169,18 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 		for (auto box_it : believes) {
 			if (box_it.second == goal_obj) {
 				int d = distance_map[box_it.first][agent_coord];
+				assert(d > 0); //TODO: Remove
 				if (d < dist) {
-					dist = d;
 					coordinates_t adj_pos = get_nearest_adjacent(believes, box_it.first, agent_coord);
+					if (equal(adj_pos, {-1, -1}))
+							continue;
+					dist = d;
 					agent_goal = {FIND_BOX, adj_pos};
 				}
 			}
 		}
 	}
-return agent_goal;
+	return agent_goal;
 }
 
 AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
@@ -203,8 +197,10 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 			agent_col = c.y;
 		} else if (is_box(obj)) {
 			boxes[c.x][c.y] = obj;
-			if (goals_map.count(it.first) && goals_map[it.first] == obj)
+			if (goals_map.count(it.first) && goals_map[it.first] == obj
+					&& get_color(obj) == get_color(this->agent_id)) {
 				goal[it.first.x][it.first.y] = obj;
+			}
 		}
 
 	}
@@ -444,13 +440,13 @@ void BdiAgent::run()
 			AgentState* state = this->intention_to_state(believes, intention);
 			cerr << state->repr();
 			plan = search(state, -1);
-			cerr << "Plan result size: " << plan.size() << endl;
+			cerr << "Plan result size agent " << agent_id << ": " << plan.size() << endl;
 		}
 		for (plan_index = 0; plan_index < plan.size(); plan_index++) {
 plan_loop:
 			CAction next_action = plan[plan_index];
 			this->time;
-			//if (time > 100) return;
+			//if (time > 170) return;
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);

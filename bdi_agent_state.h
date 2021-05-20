@@ -17,6 +17,7 @@ class AgentState {
     CAction action;
     AgentState *parent;
     int g; // depth
+	char carry_box;
 	bool on_box;
 	bool allow_others;
 

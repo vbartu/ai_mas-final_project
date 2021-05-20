@@ -2,12 +2,13 @@
 #include "heuristic.h"
 #include "global.h"
 
-static int goal_count(const AgentState* state);
+#define OTHER_BOXES_PENALTY 10
+
 static int precomputed_distance(const AgentState* state);
 static int precomputed_distance(const ConflictState* state);
 static int keep_near_box(const AgentState* state);
-static int avoid_goals(const AgentState* state);
 static int avoid_other_boxes(const AgentState* state);
+static int avoid_moving_boxes(const AgentState* state);
 
 bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* state2) const
 {
@@ -16,42 +17,13 @@ bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* sta
 
 int HeuristicHelper::h(const AgentState* state) const
 {
-	return precomputed_distance(state) + keep_near_box(state) + avoid_other_boxes(state);
-}
-
-bool ConflictHeuristicHelper::operator()(const ConflictState* state1, const ConflictState* state2) const
-{
-	return this->h(state1) > this->h(state2);
-}
-
-int ConflictHeuristicHelper::h(const ConflictState* state) const
-{
-	return precomputed_distance(state);
-}
-
-static int goal_count(const AgentState* state)
-{
-	int missing = 0;
-	for (int row = 0; row < state->goal.size(); row++) {
-		for (int col = 0; col < state->goal.size(); col++) {
-			char goal = state->goal[row][col];
-			if (goal >= 'A' && goal <= 'Z'
-					&& state->boxes[row][col] != goal) {
-				missing++;
-			} else if (goal >= '0' && goal <= '9'
-					&& state->agent_row == row
-					&& state->agent_col == col) {
-				missing++;
-			}
-		}
-	}
-	return missing;
+	return precomputed_distance(state) + keep_near_box(state) + avoid_other_boxes(state) + avoid_moving_boxes(state);
 }
 
 static int avoid_other_boxes(const AgentState* state)
 {
 	if (state->allow_others && state->on_box) {
-		return 5;
+		return OTHER_BOXES_PENALTY;
 	}
 	return 0;
 }
@@ -81,6 +53,47 @@ static int precomputed_distance(const AgentState* state)
 	return distance;
 }
 
+static int keep_near_box(const AgentState* state)
+{
+	int distance = 0;
+	coordinates_t agent_pos = {state->agent_row, state->agent_col};
+	for (int row = 0; row < n_rows; row++) {
+		for (int col = 0; col < n_cols; col++) {
+			char box = state->boxes[row][col];
+			if (is_box(box) && box == state->carry_box) {
+				distance += distance_map[{row, col}][agent_pos] - 1;
+			}
+		}
+	}
+	return distance;
+}
+
+static int avoid_moving_boxes(const AgentState* state)
+{
+	//if (state->agent_id == 3) cerr << "VAMMMOOOSS" << endl;
+	if (state->action.type == PULL || state->action.type == PUSH) {
+		if (state->action.box != state->carry_box) {
+			return 3;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
+
+bool ConflictHeuristicHelper::operator()(const ConflictState* state1, const ConflictState* state2) const
+{
+	return this->h(state1) > this->h(state2);
+}
+
+int ConflictHeuristicHelper::h(const ConflictState* state) const
+{
+	return precomputed_distance(state);
+}
+
 static int precomputed_distance(const ConflictState* state)
 {
 	int distance = 0;
@@ -107,29 +120,4 @@ static int precomputed_distance(const ConflictState* state)
 		}
 	}
 	return distance;
-}
-
-static int keep_near_box(const AgentState* state)
-{
-	int distance = 0;
-	coordinates_t agent_pos = {state->agent_row, state->agent_col};
-	for (int row = 0; row < n_rows; row++) {
-		for (int col = 0; col < n_cols; col++) {
-			char box = state->boxes[row][col];
-			if (is_box(box) && box == state->action.box) {
-				distance += distance_map[{row, col}][agent_pos] - 1;
-			}
-		}
-	}
-	return distance;
-}
-
-static int avoid_goals(const AgentState* state)
-{
-	int penalty = 0;
-	if (is_box(state->goal[state->action.agent_final.x][state->action.agent_final.x])
-			|| is_box(state->goal[state->action.box_final.x][state->action.box_final.x])) {
-		penalty+=2;
-	}
-	return penalty;
 }

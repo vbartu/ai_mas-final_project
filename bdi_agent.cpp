@@ -203,26 +203,28 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 			agent_col = c.y;
 		} else if (is_box(obj)) {
 			boxes[c.x][c.y] = obj;
-			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
+			if (goals_map.count(it.first) && goals_map[it.first] == obj)
 				goal[it.first.x][it.first.y] = obj;
-			}
 		}
 
 	}
 
+	char box = 0;
 	if (intention.type == AGENT_GOAL) {
-		goal[intention.pos.x][intention.pos.y] = (char)(this->agent_id) + '0';
-	} else if (intention.type == CARRY_BOX_TO_GOAL) {
-		goal[intention.pos.x][intention.pos.y] = goals_map[{intention.pos.x, intention.pos.y}];
-	} else if (intention.type == HELP_MOVE_BOX) {
-		goal[intention.pos.x][intention.pos.y] = intention.helping_box;
+		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
 	} else if (intention.type == FIND_BOX) {
 		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
-	} else {
-		cerr << "Not yet implented!!!" << endl;
+	} else if (intention.type == CARRY_BOX_TO_GOAL) {
+		goal[intention.pos.x][intention.pos.y] = goals_map[intention.pos];
+		box = goals_map[intention.pos];
+	} else if (intention.type == HELP_MOVE_BOX) {
+		goal[intention.pos.x][intention.pos.y] = intention.helping_box;
+		box = intention.helping_box;
 	}
 
-	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal, true);
+	AgentState* state = new AgentState(this->agent_id, agent_row, agent_col, boxes, goal, true);
+	state->carry_box = box;
+	return state;
 }
 
 conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<CAction>> next_actions, vector<goal_t> intentions)

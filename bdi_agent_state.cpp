@@ -15,6 +15,7 @@ AgentState::AgentState(int agent_id, int agent_row, int agent_col,
     this->boxes = boxes;
 	this->goal = goal;
 	this->g = 0;
+	this->carry_box = 0;
 	this->on_box = false;
 	this->allow_others = false;
 }
@@ -27,6 +28,7 @@ AgentState::AgentState(int agent_id, int agent_row, int agent_col,
     this->boxes = boxes;
 	this->goal = goal;
 	this->g = 0;
+	this->carry_box = 0;
 	this->on_box = false;
 	this->allow_others = allow_others;
 }
@@ -160,9 +162,9 @@ AgentState* AgentState::apply_action(Action action) {
     copy_state->action = completed_action;
     copy_state->g = this->g + 1;
 	copy_state->on_box = other_box;
-    return  copy_state;
+	copy_state->carry_box = this->carry_box;
+    return copy_state;
 }
-
 
 bool AgentState::is_goal_state() {
 	char goal;
@@ -185,7 +187,7 @@ bool AgentState::is_goal_state() {
 bool AgentState::is_free(int row, int col) {
 	return (!walls[row][col]
 		&& (this->boxes[row][col] == ' '
-			|| (this->is_other_box(row, col) && this->allow_others)));
+			|| (this->allow_others && this->is_other_box(row, col))));
 }
 
 bool AgentState::is_other_box(int row, int col) {

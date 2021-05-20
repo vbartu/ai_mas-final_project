@@ -29,10 +29,8 @@ typedef struct goal_t {
 
 
 typedef struct conflict_t {
-	bool is_conlfict;
-	coordinates_t conflict_loc;
-	char object;
-	int agent_id;
+	vector<vector<CAction>> new_actions;
+	vector<int> skip;
 } conflitc_t;
 
 

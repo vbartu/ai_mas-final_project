@@ -85,7 +85,7 @@ bool CAction::conflicts_goal(CAction other)
 	return equal(this->agent_final, other.agent_final)
 		|| equal(this->agent_final, other.box_final)
 		|| equal(this->box_final, other.agent_final)
-		|| equal(this->box_final, other.agent_final);
+		|| equal(this->box_final, other.box_final);
 }
 
 

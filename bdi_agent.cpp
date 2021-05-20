@@ -224,78 +224,70 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal, true);
 }
 
-bool select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_inc, int* a2_inc)
+conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<CAction>> next_actions, vector<goal_t> intentions)
 {
-#if 0 // first free cell
-	for (int i = 0; i < a1.size(); i++) {
-		for (int j = 0; j < a2.size() && j <= i; j++) {
-			if (!a1[i].conflicts_goal(a2[j])) {
-				*a1_inc = i;
-				*a2_inc = j;
-				return true;
-			}
-		}
-	}
-#else // last free cell (usually smaller solution, maybe fails?
-	for (int i = a1.size()-1; i >= 0; i--) {
-		for (int j = a2.size()-1; j >= 0; j--) {
-			if (!a1[i].conflicts_goal(a2[j])) {
-				*a1_inc = i;
-				*a2_inc = j;
-				return true;
-			}
-		}
-	}
-#endif
-	return false;
-}
-
-ConflictState* BdiAgent::conflict_to_state(umap_t believes, char other_id,
-		CAction action, CAction other_action)
-{
-	vector<int> agent_ids;
-	vector<int> agent_rows(2);
-	vector<int> agent_cols(2);
+	// Add agents
+	vector<int> agent_rows, agent_cols;
+	agent_rows.push_back(next_actions[0][0].agent_pos.x);
+	agent_cols.push_back(next_actions[0][0].agent_pos.y);
+	agent_rows.push_back(next_actions[1][0].agent_pos.x);
+	agent_cols.push_back(next_actions[1][0].agent_pos.y);
+	// Add boxes (and their goals if they are on them)
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
 	vector<vector<char>> conflict_goals(n_rows, vector<char>(n_cols, ' '));
-
-	agent_ids.push_back(this->agent_id);
-	agent_ids.push_back(other_id);
-
 	for (auto& it : believes) {
-		coordinates_t c = it.first;
-		char obj = believes[c];
-		if (int(obj) - int('0') == this->agent_id) {
-			agent_rows[0] = c.x;
-			agent_cols[0] = c.y;
-		} else if (int(obj) - int('0') == int(other_id)) {
-			agent_rows[1] = c.x;
-			agent_cols[1] = c.y;
-		} else if (is_box(obj) && (get_color(this->agent_id) == get_color(obj)
-					|| get_color(other_id) == get_color(obj))) {
-			boxes[c.x][c.y] = obj;
-			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
-				conflict_goals[it.first.x][it.first.y] = obj;
+		if (is_box(it.second)) {
+			boxes[it.first.x][it.first.y] = it.second;
+			if (goals_map.count(it.first) && goals_map[it.first] == it.second) {
+				conflict_goals[it.first.x][it.first.y] = it.second;
 			}
 		}
 	}
 
-	coordinates_t a1 = action.agent_final;
-	conflict_goals[a1.x][a1.y] = this->agent_id + '0';
-	if (action.type == ActionType::PUSH
-			|| action.type == ActionType::PULL) {
-		coordinates_t b1 = action.box_final;
-		conflict_goals[b1.x][b1.y] = action.box;
+	// Add goals
+	vector<int> skip(next_actions.size(), 0);
+	int aux_i = (next_actions[0].size() > 3) ? 3 : next_actions[0].size()-1;
+	int aux_j = (next_actions[1].size() > 3) ? 3 : next_actions[1].size()-1;
+	bool founded = false;
+	for (int i = aux_i; i >= 0; i--) {
+		if (founded) break;
+		for (int j = aux_j; j >= 0; j--) {
+			if (!next_actions[0][i].conflicts_goal(next_actions[1][j])) {
+				skip[0] = i;
+				skip[1] = j;
+				founded = true;
+				break;
+			}
+		}
 	}
-	coordinates_t a2 = other_action.agent_final;
-	conflict_goals[a2.x][a2.y] = other_id + '0';
-	if (other_action.type == ActionType::PUSH
-			|| other_action.type == ActionType::PULL) {
-		coordinates_t b2 = other_action.box_final;
-		conflict_goals[b2.x][b2.y] = other_action.box;
+	if (founded) {
+		for (int i = 0; i < next_actions.size(); i++) {
+			conflict_goals[next_actions[i][skip[i]].box_final.x][next_actions[i][skip[i]].box_final.y] = next_actions[i][skip[i]].box;
+			conflict_goals[next_actions[i][skip[i]].agent_final.x][next_actions[i][skip[i]].agent_final.y] = agent_ids[i] + '0';
+		}
+	} else if (intentions[0].type == NO_GOAL || intentions[1].type == NO_GOAL) {
+		for (int i = 0; i < next_actions.size(); i++) {
+			if (intentions[i].type != NO_GOAL) {
+				conflict_goals[next_actions[i][0].box_final.x][next_actions[i][0].box_final.y] = next_actions[i][0].box;
+				conflict_goals[next_actions[i][0].agent_final.x][next_actions[i][0].agent_final.y] = agent_ids[i] + '0';
+			}
+		}
+	} else {
+		return {};
 	}
 
-	return new ConflictState(agent_ids, agent_rows, agent_cols, boxes, conflict_goals);
+	// Resolve level
+	ConflictState* state = new ConflictState(agent_ids, agent_rows, agent_cols, boxes, conflict_goals);
+	cerr << state->repr();
+	vector<vector<CAction>> conflict_plan = conflict_search(state);
+
+	cerr << "Solved!!! " << conflict_plan[0].size() << " skip: " << skip[0] << " " << skip[1] << endl;
+	for (int i = 0; i < conflict_plan[0].size(); i ++) {
+		cerr << conflict_plan[0][i].name << "|" << conflict_plan[1][i].name << endl;
+	}
+	cerr << endl;
+
+	return {conflict_plan, skip};
 }
 
 bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
@@ -381,6 +373,7 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 	}
 
 	AgentState* state = new AgentState(agent_id, agent_row, agent_col, boxes, goals);
+	cerr << state->repr();
 
 	vector<CAction> around_plan = search(state, 30000);
 
@@ -422,7 +415,8 @@ void BdiAgent::run()
 		}
 		goal_t intention = intentions.front();
 
-		cerr << "Intention agent " << agent_id << ": " << intention.type << " (" << intention.pos.x << ", " << intention.pos.y << ")" << endl;
+		if (intention.type != NO_GOAL)
+			cerr << "Intention agent " << agent_id << ": " << intention.type << " (" << intention.pos.x << ", " << intention.pos.y << ")" << endl;
 
 		plan.clear();
 		if (intention.type == NO_GOAL) {
@@ -438,6 +432,7 @@ void BdiAgent::run()
 plan_loop:
 			CAction next_action = plan[plan_index];
 			this->time;
+			if (time > 100) return;
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);
@@ -490,6 +485,7 @@ plan_loop:
 			broadcast_msg(this->time, msg);
 
 			bool step_finished = false;
+			int debug = 0;
 			while (!step_finished && n_agents > 1)
 			{ // Communication loop
 				if (get_msg(this->time, this->agent_id, &msg)) {
@@ -500,7 +496,7 @@ plan_loop:
 					case MSG_TYPE_CONFLICT_BOX:
 						{
 							// Go to box intention
-							if (intention.type == AGENT_GOAL) {
+							if (intention.type == AGENT_GOAL || intention.type == FIND_BOX) {
 								plan.erase(plan.begin()+plan_index+1, plan.end());
 							}
 							coordinates_t adjacent_pos = get_nearest_adjacent(msg.conflict_box.box_pos, plan[plan.size()-1].agent_final);
@@ -519,17 +515,13 @@ plan_loop:
 
 					case MSG_TYPE_NEXT_ACTION:
 						if (next_action.conflicts(msg.next_action)) {
-							cerr << "Conflict" << endl;
-							vector<CAction> next_actions;
-							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
-								next_actions.push_back(plan[j]);
-							}
+							cerr << "Conflict " << agent_id << endl;
 							msg.agent_id = this->agent_id;
 							msg.type = MSG_TYPE_CONFLICT_AGENTS;
-							msg.conflict = {
-									.next_actions = next_actions,
-							};
+							msg.conflict.next_actions = vector<CAction>(plan.begin()+plan_index, plan.end());
+							msg.conflict.intention = intention;
 							send_msg_to_agent(this->time, sender, msg);
+
 						} else {
 							if (msg.next_action.type == ActionType::NOOP) {
 								noop_ops[sender] = true;
@@ -573,73 +565,47 @@ plan_loop:
 
 					case MSG_TYPE_CONFLICT_AGENTS:
 						if (this->agent_id < sender) {
-							believes = this->get_current_map();
-							cerr << "Agent " << agent_id << " solving conflict for " << sender << endl;
-							// Resolve conflict
-							vector<CAction> next_actions;
-							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
-								next_actions.push_back(plan[j]);
-							}
-							vector<CAction> other_actions = msg.conflict.next_actions;
-
-							int a1_skip, a2_skip;
-							select_no_conflict_state(next_actions, other_actions, &a1_skip, &a2_skip);
-
-							if (other_actions.size() == 1) {
-								msg.agent_id = this->agent_id;
-								msg.type = MSG_TYPE_CONFLICT_AGENTS_RESOLVED;
-								msg.conflict_resolved = {
-									.skip = 0,
-									.new_actions = vector<CAction>(1, other_actions[0])
-								};
-								send_msg_to_agent(this->time, sender, msg);
-								plan.insert(plan.begin()+plan_index, CAction(ACTION_NOOP, next_actions[0].agent_pos));
-								next_action = plan[plan_index];
-								msg.type = MSG_TYPE_CHECK_AGAIN;
-								broadcast_msg_me(this->time, msg);
-							} else {
-								ConflictState* conflict_state = conflict_to_state(believes, sender,
-									next_actions[a1_skip], other_actions[a2_skip]);
-								cerr << conflict_state->repr();
-								vector<vector<CAction>> conflict_plan = conflict_search(conflict_state);
-								cerr << "Solved!!!!! " << conflict_plan[0].size() << " skip: " << a1_skip << " " << a2_skip << endl;
-								for (int i = 0; i < conflict_plan[0].size(); i ++) {
-									cerr << conflict_plan[0][i].name << "|" << conflict_plan[1][i].name << endl;
-								}
-
-								msg.agent_id = this->agent_id;
-								msg.type = MSG_TYPE_CONFLICT_AGENTS_RESOLVED;
-								msg.conflict_resolved = {
-									.skip = a2_skip,
-									.new_actions = conflict_plan[1],
-								};
-								send_msg_to_agent(this->time, sender, msg);
-								plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+a1_skip+1);
-								plan.insert(plan.begin()+plan_index, conflict_plan[0].begin(), conflict_plan[0].end());
-								next_action = plan[plan_index];
-								msg.type = MSG_TYPE_CHECK_AGAIN;
-								broadcast_msg_me(this->time, msg);
-							}
-
-						} else if (!next_action.conflicts(msg.conflict.next_actions[0])) {
-							cerr << "Conflict by yout part" << endl;
-							vector<CAction> next_actions;
-							for (int j = plan_index; j < plan.size() && j < plan_index+3; j++) {
-								next_actions.push_back(plan[j]);
-							}
+							// Solve conflict
+							vector<int> agent_ids({this->agent_id, sender});
+							vector<goal_t> intentions({intention, msg.conflict.intention});
+							vector<vector<CAction>> next_actions;
+							next_actions.push_back(vector<CAction>(plan.begin()+plan_index, plan.end()));
+							next_actions.push_back(vector<CAction>(msg.conflict.next_actions.begin(), msg.conflict.next_actions.end()));
+							believes = get_current_map();
+							conflict_t conflict = solve_conflict(believes, agent_ids, next_actions, intentions);
+							// Send solution
+							msg.agent_id = this->agent_id;
+							msg.type = MSG_TYPE_CONFLICT_AGENTS_RESOLVED;
+							msg.conflict_resolved = {
+								.skip = conflict.skip[1],
+								.new_actions = conflict.new_actions[1],
+							};
+							send_msg_to_agent(this->time, sender, msg);
+							// Update solution locally
+							plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+conflict.skip[0]+1);
+							plan.insert(plan.begin()+plan_index, conflict.new_actions[0].begin(), conflict.new_actions[0].end());
+							next_action = plan[plan_index];
+							this->waiting_for_agent = false;
+							// Tell everyone to check again
+							msg.type = MSG_TYPE_CHECK_AGAIN;
+							broadcast_msg_me(this->time, msg);
+						}
+						else if (!next_action.conflicts(msg.conflict.next_actions[0])) {
+							cerr << "Conflict by yout part " << agent_id << endl;
 							msg.agent_id = this->agent_id;
 							msg.type = MSG_TYPE_CONFLICT_AGENTS;
-							msg.conflict = {
-									.next_actions = next_actions,
-							};
+							msg.conflict.next_actions = vector<CAction>(plan.begin()+plan_index, plan.end());
+							msg.conflict.intention = intention;
 							send_msg_to_agent(this->time, sender, msg);
 						}
 						break;
 
 					case MSG_TYPE_CONFLICT_AGENTS_RESOLVED:
+						this->waiting_for_agent = false;
 						plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+msg.conflict_resolved.skip+1);
 						plan.insert(plan.begin()+plan_index, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 						next_action = plan[plan_index];
+						this->waiting_for_agent = false;
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:
@@ -667,6 +633,10 @@ plan_loop:
 								break;
 						}
 					}
+				}
+				debug++;
+				if (debug >= 3000) {
+					return;
 				}
 			} // Communication loop
 

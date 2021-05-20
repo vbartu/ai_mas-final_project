@@ -31,10 +31,6 @@ bool FrontierBFS::contains(AgentState* state) {
 	return this->set.count(state);
 }
 
-string FrontierBFS::getName() {
-	return "breadth-first search";
-}
-
 /* ConflictFrontierBFS */
 
 void ConflictFrontierBFS::add(ConflictState* state) {
@@ -63,11 +59,6 @@ bool ConflictFrontierBFS::contains(ConflictState* state) {
 	return this->set.count(state);
 }
 
-string ConflictFrontierBFS::getName() {
-	return "breadth-first search";
-}
-
-
 /* FrontierBestFS */
 
 void FrontierBestFS::add(AgentState* state) {
@@ -94,6 +85,30 @@ bool FrontierBestFS::contains(AgentState* state) {
 	return this->set.count(state);
 }
 
-string FrontierBestFS::getName() {
-	return "best-first search";
+/** BestFS */
+
+void ConflictFrontierBestFS::add(ConflictState* state) {
+	this->pq.push(state);
+	this->set.insert(state);
+}
+
+
+ConflictState* ConflictFrontierBestFS::pop() {
+	ConflictState* state = this->pq.top();
+	this->pq.pop();
+	this->set.erase(state);
+	return state;
+}
+
+
+bool ConflictFrontierBestFS::is_empty() {
+	return this->pq.empty();
+}
+
+int ConflictFrontierBestFS::size() {
+	return this->pq.size();
+}
+
+bool ConflictFrontierBestFS::contains(ConflictState* state) {
+	return this->set.count(state);
 }

@@ -406,11 +406,6 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 	return false;
 }
 
-/** Conflicts:
- * Agent vs box: ask agent to move it
- * Agents of same color: Inform other agents of our intentions
- * Deadlocks
- */
 void BdiAgent::run()
 {
 	umap_t believes;

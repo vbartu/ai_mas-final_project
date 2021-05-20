@@ -19,7 +19,6 @@ class Frontier {
     virtual bool is_empty() = 0;
     virtual int size() = 0;
     virtual bool contains(AgentState* state) = 0;
-    virtual string getName() = 0;
 };
 
 class FrontierBFS: public Frontier {
@@ -32,7 +31,6 @@ class FrontierBFS: public Frontier {
     bool is_empty();
     int size();
     bool contains(AgentState* state);
-    string getName();
 };
 
 class ConflictFrontierBFS {
@@ -45,7 +43,6 @@ class ConflictFrontierBFS {
     bool is_empty();
     int size();
     bool contains(ConflictState* state);
-    string getName();
 };
 
 class FrontierBestFS: public Frontier {
@@ -58,7 +55,18 @@ class FrontierBestFS: public Frontier {
     bool is_empty();
     int size();
     bool contains(AgentState* state);
-    string getName();
+};
+
+class ConflictFrontierBestFS {
+  public:
+    unordered_set<ConflictState*, ConflictHashHelper, ConflictEqualHelper> set;
+    priority_queue<ConflictState*, vector<ConflictState*>, ConflictHeuristicHelper> pq;
+
+    void add(ConflictState* state);
+    ConflictState* pop();
+    bool is_empty();
+    int size();
+    bool contains(ConflictState* state);
 };
 
 #endif

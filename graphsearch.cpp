@@ -57,7 +57,7 @@ vector<CAction> search(AgentState* initial_state, int limit) {
 
 vector<vector<CAction>> conflict_search(ConflictState* initial_state) {
 	int iterations = 0;
-	ConflictFrontierBFS frontier;
+	ConflictFrontierBestFS frontier;
 	frontier.add(initial_state);
 	unordered_set<ConflictState*, ConflictHashHelper, ConflictEqualHelper> explored;
 
@@ -91,49 +91,6 @@ vector<vector<CAction>> conflict_search(ConflictState* initial_state) {
 		vector<ConflictState*> expanded_states = state->get_expanded_states();
 
 		for (ConflictState* new_state : expanded_states) {
-			if (!frontier.contains(new_state) && !explored.count(new_state)) {
-				frontier.add(new_state);
-			}
-		}
-	}
-}
-
-vector<CAction> conflict_box_search(AgentState* conflict_box_state) {
-	int iterations = 0;
-	FrontierBFS frontier;
-	frontier.add(conflict_box_state);
-	unordered_set<AgentState*, HashHelper, EqualHelper> explored;
-
-	while (true) {
-		if(frontier.size() == 0) {
-			vector<CAction> action_vector;
-			cerr << "Frontier empty error" << endl;
-			return action_vector;
-		}
-
-		// Get next node to be explored from the frontier
-		AgentState* state = frontier.pop();
-
-		iterations += 1;
-		if (iterations % 10000 == 0) {
-			// fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
-		}
-
-
-		// If this state is a goal state, solition is found
-		// Return the path (list of actions) followed to get to this state
-		if (state->is_goal_state()) {
-			return state->extract_plan();
-		}
-
-
-		// If not, add the node to the explored set, get its successors
-		// and if they are not alreay explored or in the frontier,
-		// add them to the frontier
-		explored.insert(state);
-		vector<AgentState*> expanded_states = state->get_expanded_states();
-
-		for (AgentState* new_state : expanded_states) {
 			if (!frontier.contains(new_state) && !explored.count(new_state)) {
 				frontier.add(new_state);
 			}

@@ -262,11 +262,13 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 		}
 	}
 	if (founded) {
+		cerr << "Increible error con solucion, lloremos" << endl;
 		for (int i = 0; i < next_actions.size(); i++) {
 			conflict_goals[next_actions[i][skip[i]].box_final.x][next_actions[i][skip[i]].box_final.y] = next_actions[i][skip[i]].box;
 			conflict_goals[next_actions[i][skip[i]].agent_final.x][next_actions[i][skip[i]].agent_final.y] = agent_ids[i] + '0';
 		}
 	} else if (intentions[0].type == NO_GOAL || intentions[1].type == NO_GOAL) {
+		cerr << "Increible error maybe solucion, lloremos" << endl;
 		for (int i = 0; i < next_actions.size(); i++) {
 			if (intentions[i].type != NO_GOAL) {
 				conflict_goals[next_actions[i][0].box_final.x][next_actions[i][0].box_final.y] = next_actions[i][0].box;
@@ -302,7 +304,7 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 	}
 	cerr << endl;
 	for (auto& plan : conflict_plan) {
-		while (plan[plan.size()-1].type == NOOP) {
+		while (plan[plan.size()-1].type == NOOP && plan.size() > 2) {
 			plan.erase(plan.end()-1);
 		}
 	}

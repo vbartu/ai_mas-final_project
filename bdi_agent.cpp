@@ -68,14 +68,15 @@ coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t bo
 	{
 		bool cell_free = true;
 		for (int i = 0; i < other_actions.size(); i++) {
-			if (believes[neighbours[j]]
-					|| (neighbours[j].x == box_pos.x && neighbours[j].y == box_pos.y)
-					|| (neighbours[j].x == other_actions[i].agent_pos.x && neighbours[j].y == other_actions[i].agent_pos.y)
-					|| (neighbours[j].x == other_actions[i].agent_final.x && neighbours[j].y == other_actions[i].agent_final.y)
-					|| (neighbours[j].x == other_actions[i].box_pos.x && neighbours[j].y == other_actions[i].box_pos.y)
-					|| (neighbours[j].x == other_actions[i].box_final.x && neighbours[j].y == other_actions[i].box_final.y))
+			if (believes.count(neighbours[j])
+						|| equal(neighbours[j], box_pos)
+						|| equal(neighbours[j], other_actions[i].agent_pos)
+						|| equal(neighbours[j], other_actions[i].box_pos)
+						|| equal(neighbours[j], other_actions[i].agent_final)
+						|| equal(neighbours[j], other_actions[i].box_final)) {
 				cell_free = false;
-				continue;
+				break;
+			}
 		}
 
 		if (cell_free)
@@ -452,10 +453,7 @@ plan_loop:
 				}
 				else {
 					cerr << "Box conflict agent " << agent_id << endl;
-					vector<CAction> next_actions;
-					for (int j = plan_index; j < plan.size() && j < plan_index+5; j++) {
-						next_actions.push_back(plan[j]);
-					}
+					vector<CAction> next_actions(plan.begin()+plan_index, plan.end());
 					msg.agent_id = this->agent_id;
 					msg.type = MSG_TYPE_CONFLICT_BOX;
 					msg.conflict_box = {box_pos, next_actions};

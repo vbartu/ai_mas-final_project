@@ -98,34 +98,6 @@ coordinates_t BdiAgent::nearest_help_goal_cell(umap_t believes, coordinates_t bo
 	return (coordinates_t) {-1,-1};
 }
 
-AgentState* BdiAgent::help_intention_to_state(umap_t believes, goal_t intention,
-		coordinates_t agent_pos, coordinates_t box_pos)
-{
-	int agent_row = agent_pos.x;
-	int agent_col = agent_pos.y;
-	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
-	vector<vector<char>> goal(n_rows, vector<char>(n_cols, ' '));
-
-	for (auto& it : believes) {
-		coordinates_t c = it.first;
-		char obj = believes[c];
-		if (obj - '0' == this->agent_id) {
-			agent_row = c.x;
-			agent_col = c.y;
-		} else if (is_box(obj) && get_color(this->agent_id) == get_color(obj)) {
-			boxes[c.x][c.y] = obj;
-		}
-	}
-	// Keep only that goal
-	if (intention.type == FIND_BOX)
-		goal[intention.pos.x][intention.pos.y] = this->agent_id + '0';
-	else if (intention.type == CARRY_BOX_TO_GOAL)
-		goal[intention.pos.x][intention.pos.y] = believes[box_pos];
-	else {
-		cerr << "Not yet implented!!!" << endl;	}
-	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
-}
-
 goal_t BdiAgent::get_next_goal(umap_t believes)
 {
 
@@ -231,7 +203,10 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
 				goal[it.first.x][it.first.y] = obj;
 			}
+		} else if (obj == 'F') {
+			boxes[c.x][c.y] = obj;
 		}
+
 	}
 
 	if (intention.type == AGENT_GOAL) {
@@ -246,7 +221,7 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 		cerr << "Not yet implented!!!" << endl;
 	}
 
-	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal);
+	return new AgentState(this->agent_id, agent_row, agent_col, boxes, goal, true);
 }
 
 void select_no_conflict_state(vector<CAction> a1, vector<CAction> a2, int* a1_inc, int* a2_inc)
@@ -354,6 +329,7 @@ bool box_conflict(CAction action, umap_t believes, coordinates_t* box_pos)
 
 bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t box_pos)
 {
+	cerr << "Agent " << agent_id << " Tryin going around" << endl;
 	vector<CAction> next_actions(plan.begin()+plan_index, plan.end());
 	int agent_row = next_actions[0].agent_pos.x;
 	int agent_col = next_actions[0].agent_pos.y;
@@ -408,7 +384,7 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 	vector<CAction> around_plan = search(state, 30000);
 
 	if (!around_plan.empty()) {
-		cerr << "Going around" << endl;
+		cerr << "Agent " << agent_id << " Going around" << endl;
 		cerr << state->repr();
 		for (int a = 0; a < around_plan.size(); a++)
 			cerr << around_plan[a].name << endl;

@@ -15,6 +15,20 @@ AgentState::AgentState(int agent_id, int agent_row, int agent_col,
     this->boxes = boxes;
 	this->goal = goal;
 	this->g = 0;
+	this->on_box = false;
+	this->allow_others = false;
+}
+
+AgentState::AgentState(int agent_id, int agent_row, int agent_col,
+		vector<vector<char>> boxes, vector<vector<char>> goal, bool allow_others) {
+    this->agent_id = agent_id;
+    this->agent_row = agent_row;
+    this->agent_col = agent_col;
+    this->boxes = boxes;
+	this->goal = goal;
+	this->g = 0;
+	this->on_box = false;
+	this->allow_others = allow_others;
 }
 
 bool AgentState::operator==(const AgentState &other) const {
@@ -93,6 +107,7 @@ AgentState* AgentState::apply_action(Action action) {
     int copy_agent_col = this->agent_col;
 	CAction completed_action;
     vector<vector<char>> copy_boxes(this->boxes);
+	bool other_box = false;
 
 	if (action.type == ActionType::NOOP) {
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
@@ -103,6 +118,7 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_agent_col += action.acd;
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
 			this->action.box);
+		other_box = is_other_box(copy_agent_row, copy_agent_col);
 	} else if (action.type == ActionType::PUSH) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -117,6 +133,8 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
 			{box_row, box_col}, box);
+		other_box = is_other_box(copy_agent_row, copy_agent_col);
+		other_box = is_other_box(box_dst_row, box_dst_col);
 	} else if (action.type == ActionType::PULL) {
 		copy_agent_row += action.ard;
 		copy_agent_col += action.acd;
@@ -131,14 +149,17 @@ AgentState* AgentState::apply_action(Action action) {
 		copy_boxes[box_row][box_col] = ' ';
 		completed_action = CAction(action, {this->agent_row, this->agent_col},
 			{box_row, box_col}, box);
+		other_box = is_other_box(copy_agent_row, copy_agent_col);
+		other_box = is_other_box(box_dst_row, box_dst_col);
 	}
 
 	AgentState* copy_state;
 	copy_state = new AgentState(this->agent_id, copy_agent_row, copy_agent_col,
-		copy_boxes, this->goal);
+		copy_boxes, this->goal, this->allow_others);
     copy_state->parent = this;
     copy_state->action = completed_action;
     copy_state->g = this->g + 1;
+	copy_state->on_box = other_box;
     return  copy_state;
 }
 
@@ -162,7 +183,14 @@ bool AgentState::is_goal_state() {
 };
 
 bool AgentState::is_free(int row, int col) {
-	return !walls[row][col] && this->boxes[row][col] == ' ';
+	return (!walls[row][col]
+		&& (this->boxes[row][col] == ' '
+			|| (this->is_other_box(row, col) && this->allow_others)));
+}
+
+bool AgentState::is_other_box(int row, int col) {
+	char box = this->boxes[row][col];
+	return is_box(box) && get_color(box) != get_color(this->agent_id);
 }
 
 vector<CAction> AgentState::extract_plan() {

@@ -6,6 +6,7 @@ static int goal_count(const AgentState* state);
 static int precomputed_distance(const AgentState* state);
 static int keep_near_box(const AgentState* state);
 static int avoid_goals(const AgentState* state);
+static int avoid_other_boxes(const AgentState* state);
 
 bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* state2) const
 {
@@ -14,7 +15,7 @@ bool HeuristicHelper::operator()(const AgentState* state1, const AgentState* sta
 
 int HeuristicHelper::h(const AgentState* state) const
 {
-	return precomputed_distance(state) + keep_near_box(state);
+	return precomputed_distance(state) + keep_near_box(state) + avoid_other_boxes(state);
 }
 
 static int goal_count(const AgentState* state)
@@ -34,6 +35,14 @@ static int goal_count(const AgentState* state)
 		}
 	}
 	return missing;
+}
+
+static int avoid_other_boxes(const AgentState* state)
+{
+	if (state->allow_others && state->on_box) {
+		return 15;
+	}
+	return 0;
 }
 
 static int precomputed_distance(const AgentState* state)

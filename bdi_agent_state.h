@@ -17,9 +17,14 @@ class AgentState {
     CAction action;
     AgentState *parent;
     int g; // depth
+	bool on_box;
+	bool allow_others;
 
     AgentState(int agent_id, int agent_row, int agent_col,
 		vector<vector<char>> boxes, vector<vector<char>> goal);
+
+	AgentState(int agent_id, int agent_row, int agent_col,
+		vector<vector<char>> boxes, vector<vector<char>> goal, bool allow_others);
 
     vector<AgentState*> get_expanded_states();
 
@@ -30,6 +35,7 @@ class AgentState {
     bool is_goal_state();
 
     bool is_free(int row, int col);
+	bool is_other_box(int row, int col);
 
     vector<CAction> extract_plan();
 

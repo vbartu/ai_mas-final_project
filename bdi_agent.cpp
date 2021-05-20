@@ -150,7 +150,8 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 		}
 
 		// Save agent goal, in case no box is left
-		if (goal_obj - '0' == this->agent_id && !equal(goal_coord, agent_coord)) {
+		if (goal_obj - '0' == this->agent_id && !equal(goal_coord, agent_coord)
+				&& agent_goal.type == NO_GOAL) {
 			agent_goal = {AGENT_GOAL, goal_coord};
 			continue;
 		}
@@ -446,7 +447,6 @@ void BdiAgent::run()
 plan_loop:
 			CAction next_action = plan[plan_index];
 			this->time;
-			//if (time > 170) return;
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);

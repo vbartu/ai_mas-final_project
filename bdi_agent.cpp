@@ -13,6 +13,8 @@ using namespace std;
 vector<umap_t> BdiAgent::world;
 int BdiAgent::current_time = 0;
 pthread_mutex_t BdiAgent::world_mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t BdiAgent::world_cond = PTHREAD_COND_INITIALIZER;
+static vector<bool> advance_control(10, false);
 
 
 BdiAgent::BdiAgent(int agent_id)
@@ -22,7 +24,7 @@ BdiAgent::BdiAgent(int agent_id)
 	this->waiting_for_agent = false;
 }
 
-coordinates_t get_nearest_adjacent(coordinates_t box_pos, coordinates_t agent_pos)
+coordinates_t get_nearest_adjacent(umap_t believes, coordinates_t box_pos, coordinates_t agent_pos)
 {
 	int row_delta[4] = {-1, 0, 0, 1};
 	int col_delta[4] = {0, -1, 1, 0};
@@ -33,7 +35,7 @@ coordinates_t get_nearest_adjacent(coordinates_t box_pos, coordinates_t agent_po
 			box_pos.x + row_delta[i],
 			box_pos.y + col_delta[i]
 		};
-		if (walls[adj_pos.x][adj_pos.y]) {
+		if (walls[adj_pos.x][adj_pos.y] || (believes.count(adj_pos) && is_box(believes[adj_pos]))) {
 			continue;
 		} else {
 			if (distance_map[adj_pos][agent_pos] < dist) {
@@ -178,7 +180,7 @@ goal_t BdiAgent::get_next_goal(umap_t believes)
 				int d = distance_map[box_it.first][agent_coord];
 				if (d < dist) {
 					dist = d;
-					coordinates_t adj_pos = get_nearest_adjacent(box_it.first, agent_coord);
+					coordinates_t adj_pos = get_nearest_adjacent(believes, box_it.first, agent_coord);
 					agent_goal = {FIND_BOX, adj_pos};
 				}
 			}
@@ -274,7 +276,21 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 			}
 		}
 	} else {
-		return {};
+		cerr << "Increible error sin solucion, lloremos" << endl;
+		vector<vector<CAction>> conflict_plan(2);
+		int first, second;
+		if (intentions[1].type > intentions[0].type) {
+			first = 1;
+			second = 0;
+		} else {
+			first = 0;
+			second = 1;
+		}
+		skip[first] = 0;
+		conflict_plan[first].push_back(next_actions[first][0]);
+		skip[second] = next_actions[second].size()-1;
+		conflict_plan[second].push_back(CAction(ACTION_NOOP, next_actions[second][0].agent_pos));
+		return {conflict_plan, skip};
 	}
 
 	// Resolve level
@@ -374,7 +390,7 @@ bool BdiAgent::try_around_box(umap_t believes, goal_t intention, coordinates_t b
 	}
 
 	AgentState* state = new AgentState(agent_id, agent_row, agent_col, boxes, goals);
-	cerr << state->repr();
+	//cerr << state->repr();
 
 	vector<CAction> around_plan = search(state, 30000);
 
@@ -433,7 +449,7 @@ void BdiAgent::run()
 plan_loop:
 			CAction next_action = plan[plan_index];
 			this->time;
-			if (time > 100) return;
+			//if (time > 100) return;
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);
@@ -497,7 +513,8 @@ plan_loop:
 							if (intention.type == AGENT_GOAL || intention.type == FIND_BOX) {
 								plan.erase(plan.begin()+plan_index+1, plan.end());
 							}
-							coordinates_t adjacent_pos = get_nearest_adjacent(msg.conflict_box.box_pos, plan[plan.size()-1].agent_final);
+							believes = get_current_map();
+							coordinates_t adjacent_pos = get_nearest_adjacent(believes, msg.conflict_box.box_pos, plan[plan.size()-1].agent_final);
 							intentions.push_back({FIND_BOX, adjacent_pos});
 							// Move box intention
 							coordinates_t goal_box_pos = nearest_help_goal_cell(believes, msg.conflict_box.box_pos,
@@ -584,6 +601,9 @@ plan_loop:
 							plan.insert(plan.begin()+plan_index, conflict.new_actions[0].begin(), conflict.new_actions[0].end());
 							next_action = plan[plan_index];
 							this->waiting_for_agent = false;
+			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
+				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y,
+				plan.size());
 							// Tell everyone to check again
 							msg.type = MSG_TYPE_CHECK_AGAIN;
 							broadcast_msg_me(this->time, msg);
@@ -604,6 +624,9 @@ plan_loop:
 						plan.insert(plan.begin()+plan_index, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 						next_action = plan[plan_index];
 						this->waiting_for_agent = false;
+			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
+				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y,
+				plan.size());
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:
@@ -633,7 +656,8 @@ plan_loop:
 					}
 				}
 				debug++;
-				if (debug >= 3000) {
+				//if (debug >= 300000) {
+				if (false) {
 					return;
 				}
 			} // Communication loop
@@ -641,6 +665,7 @@ plan_loop:
 			update_position(next_action);
 			this->time++;
 			this->final_plan.push_back(next_action);
+			this->advance();
 		}
 	}
 }
@@ -690,3 +715,25 @@ void BdiAgent::update_position(CAction action)
 		assert(!pthread_mutex_unlock(&world_mtx));
 	}
 }
+
+void BdiAgent::advance()
+{
+	assert(!pthread_mutex_lock(&world_mtx));
+	advance_control[this->agent_id] = true;
+
+	bool advance = true;
+	for (int i = 0; i < n_agents; i++) {
+		if (!advance_control[i]) {
+			advance = false;
+			break;
+		}
+	}
+	if (advance) {
+		advance_control = vector<bool>(10, false);
+		assert(!pthread_cond_broadcast(&world_cond));
+	} else {
+		assert(!pthread_cond_wait(&world_cond, &world_mtx));	
+	}
+	assert(!pthread_mutex_unlock(&world_mtx));
+}
+

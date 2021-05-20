@@ -13,10 +13,10 @@ using namespace std;
 
 typedef enum goal_type_t {
 	NO_GOAL,           // There is no goals for this agent
+	AGENT_GOAL,        // If agent has goal, move agent to goal,
 	FIND_BOX,          // Move agent to box
 	CARRY_BOX_TO_GOAL, // If agent is next to box, move box to goal
 	HELP_MOVE_BOX,
-	AGENT_GOAL,        // If agent has goal, move agent to goal,
 } goal_type_t;
 
 
@@ -39,6 +39,7 @@ class BdiAgent {
 		static vector<umap_t> world;
 		static int current_time;
 		static pthread_mutex_t world_mtx;
+		static pthread_cond_t world_cond;
 
 		int agent_id;
 		int time;
@@ -67,6 +68,7 @@ class BdiAgent {
 		void set_next_action(CAction action);
 		bool check_conflict(CAction next_action);
 		void update_position(CAction action);
+		void advance();
 
 		coordinates_t nearest_help_goal_cell(umap_t believes, coordinates_t box_pos,
 			vector<CAction> other_actions);

@@ -91,7 +91,7 @@ bool ConflictHeuristicHelper::operator()(const ConflictState* state1, const Conf
 
 int ConflictHeuristicHelper::h(const ConflictState* state) const
 {
-	return precomputed_distance(state);
+	return precomputed_distance(state) + state->g;
 }
 
 static int precomputed_distance(const ConflictState* state)

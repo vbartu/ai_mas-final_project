@@ -55,6 +55,7 @@ typedef struct msg_t {
 void send_msg_to_agent(int time, int dst_agent_id, msg_t msg);
 void send_msg_to_agents(int time, vector<int> dst_agent_ids, msg_t msg);
 void broadcast_msg(int time, msg_t msg);
+void broadcast_msg_me(int time, msg_t msg);
 bool get_msg(int time, int agent_id, msg_t* msg);
 
 

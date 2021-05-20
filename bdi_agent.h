@@ -23,6 +23,8 @@ typedef enum goal_type_t {
 typedef struct goal_t {
 	goal_type_t type;
 	coordinates_t pos;
+	int helping_agent;
+	int helping_box;
 } goal_t;
 
 
@@ -47,8 +49,6 @@ class BdiAgent {
 		int plan_index;
 
 		bool waiting_for_agent;
-		int helping_agent;
-		char box_helping;
 
 		BdiAgent(int agent_id);
 

@@ -36,19 +36,32 @@ void broadcast_msg(int time, msg_t msg)
 	assert(!pthread_mutex_unlock(&msg_queue_mtx));
 }
 
+void broadcast_msg_me(int time, msg_t msg)
+{
+	msg.time = time;
+	assert(!pthread_mutex_lock(&msg_queue_mtx));
+	for (int i; i < n_agents; i++) {
+		msg_queue[i].push(msg);
+	}
+	assert(!pthread_mutex_unlock(&msg_queue_mtx));
+}
+
+
 bool get_msg(int time, int agent_id, msg_t* msg)
 {
-	bool success = true;
+	bool success = false;
 	assert(!pthread_mutex_lock(&msg_queue_mtx));
-	if (msg_queue[agent_id].empty()) {
-		success = false;
-	} else {
+	while (!msg_queue[agent_id].empty()) {
 		*msg = msg_queue[agent_id].front();
-		if (msg->time > time) {
-			success = false;
-		} else {
+		if (msg->time < time) {
 			msg_queue[agent_id].pop();
+			continue;
+		} else if (msg->time > time) {
+			break;
 		}
+		success = true;
+		msg_queue[agent_id].pop();
+		break;
 	}
 	assert(!pthread_mutex_unlock(&msg_queue_mtx));
 	return success;

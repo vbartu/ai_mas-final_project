@@ -8,7 +8,7 @@
 
 using namespace std;
 
-vector<CAction> search(AgentState* initial_state);
+vector<CAction> search(AgentState* initial_state, int limit);
 
 vector<CAction> conflict_box_search(AgentState* conflict_box_search);
 

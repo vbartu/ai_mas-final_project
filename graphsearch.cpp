@@ -3,20 +3,22 @@
 #include <chrono>
 #include <vector>
 #include <unordered_set>
+#include <limits.h>
 
 #include "graphsearch.h"
 #include "frontier.h"
 
 using namespace std;
 
-vector<CAction> search(AgentState* initial_state) {
+vector<CAction> search(AgentState* initial_state, int limit) {
+	if (limit < 0) limit = INT_MAX;
 	int iterations = 0;
 	FrontierBestFS frontier;
 	frontier.add(initial_state);
 	unordered_set<AgentState*, HashHelper, EqualHelper> explored;
 
 	while (true) {
-		if(frontier.size() == 0) {
+		if(frontier.size() == 0 || iterations > limit) {
 			vector<CAction> action_vector;
 			cerr << "Frontier empty error" << endl;
 			return action_vector;
@@ -27,8 +29,8 @@ vector<CAction> search(AgentState* initial_state) {
 
 		iterations += 1;
 		if (iterations % 10000 == 0) {
-			//fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
-			//cerr << state->repr();
+			fprintf(stderr, "Explored: %d, Frontier: %d\n", explored.size(), frontier.size());
+			cerr << state->repr();
 		}
 
 

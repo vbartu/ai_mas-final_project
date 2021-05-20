@@ -201,13 +201,11 @@ AgentState* BdiAgent::intention_to_state(umap_t believes, goal_t intention)
 		if (obj - '0' == this->agent_id) {
 			agent_row = c.x;
 			agent_col = c.y;
-		} else if (is_box(obj) && get_color(this->agent_id) == get_color(obj)) {
+		} else if (is_box(obj)) {
 			boxes[c.x][c.y] = obj;
 			if (goals_map.count(it.first) && goals_map[it.first] == obj) {
 				goal[it.first.x][it.first.y] = obj;
 			}
-		} else if (obj == 'F') {
-			boxes[c.x][c.y] = obj;
 		}
 
 	}

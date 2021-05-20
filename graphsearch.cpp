@@ -37,7 +37,9 @@ vector<CAction> search(AgentState* initial_state, int limit) {
 		// If this state is a goal state, solition is found
 		// Return the path (list of actions) followed to get to this state
 		if (state->is_goal_state()) {
-			return state->extract_plan();
+			vector<CAction> plan = state->extract_plan();
+			return plan;
+		
 		}
 
 
@@ -80,7 +82,8 @@ vector<vector<CAction>> conflict_search(ConflictState* initial_state) {
 		// If this state is a goal state, solition is found
 		// Return the path (list of actions) followed to get to this state
 		if (state->is_goal_state()) {
-			return state->extract_plan();
+			vector<vector<CAction>> plan = state->extract_plan();
+			return plan;
 		}
 
 

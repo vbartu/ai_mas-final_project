@@ -10,8 +10,6 @@ using namespace std;
 
 vector<CAction> search(AgentState* initial_state, int limit);
 
-vector<CAction> conflict_box_search(AgentState* conflict_box_search);
-
 vector<vector<CAction>> conflict_search(ConflictState* initial_state);
 
 #endif // __GRAPHSEARCH_H

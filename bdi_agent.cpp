@@ -228,10 +228,10 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 {
 	// Add agents
 	vector<int> agent_rows, agent_cols;
-	agent_rows.push_back(next_actions[0][0].agent_pos.x);
-	agent_cols.push_back(next_actions[0][0].agent_pos.y);
-	agent_rows.push_back(next_actions[1][0].agent_pos.x);
-	agent_cols.push_back(next_actions[1][0].agent_pos.y);
+	for (int i = 0; i < agent_ids.size(); i++) {
+		agent_rows.push_back(next_actions[i][0].agent_pos.x);
+		agent_cols.push_back(next_actions[i][0].agent_pos.y);
+	}
 	// Add boxes (and their goals if they are on them)
 	vector<vector<char>> boxes(n_rows, vector<char>(n_cols, ' '));
 	vector<vector<char>> conflict_goals(n_rows, vector<char>(n_cols, ' '));
@@ -246,20 +246,45 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 
 	// Add goals
 	vector<int> skip(next_actions.size(), 0);
-	int aux_i = (next_actions[0].size() > 3) ? 3 : next_actions[0].size()-1;
-	int aux_j = (next_actions[1].size() > 3) ? 3 : next_actions[1].size()-1;
+	vector<int> aux(next_actions.size());
+	for (int i = 0; i < next_actions.size(); i++)
+		aux[i] = (next_actions[i].size() > 3) ? 3 : next_actions[i].size()-1;
 	bool founded = false;
-	for (int i = aux_i; i >= 0; i--) {
-		if (founded) break;
-		for (int j = aux_j; j >= 0; j--) {
-			if (!next_actions[0][i].conflicts_goal(next_actions[1][j])) {
-				skip[0] = i;
-				skip[1] = j;
-				founded = true;
-				break;
+	vector<CAction> curr_actions(next_actions.size());
+	while (true) {
+		for (int i = 0; i < next_actions.size(); i++)
+			curr_actions[i] = next_actions[i][aux[i]];
+		bool conflict = false;
+		for (int i = 0; i < curr_actions.size(); i++) {
+			if (conflict) break;
+			for (int j = i+1; j < curr_actions.size(); j++) {
+				if (curr_actions[i].conflicts_goal(curr_actions[j])) {
+					conflict = true;
+					break;
+				}
 			}
 		}
+		if (conflict) {
+			bool end = false;
+			for (int i = 0; i < curr_actions.size(); i++) {
+				if (aux[i] > 0) {
+					aux[i]--;
+					break;
+				} else if (i == curr_actions.size()-1) {
+					end = true;
+					break;
+				} else {
+					aux[i] = (next_actions[i].size() > 3) ? 3 : next_actions[i].size()-1;
+				}
+			}
+			if (end) break;
+		} else {
+			founded = true;
+			skip = aux;
+			break;
+		}
 	}
+
 	if (founded) {
 		cerr << "Increible error con solucion, lloremos" << endl;
 		for (int i = 0; i < next_actions.size(); i++) {
@@ -447,6 +472,7 @@ void BdiAgent::run()
 plan_loop:
 			CAction next_action = plan[plan_index];
 			this->time;
+			//if (time > 170) return;
 
 			vector<bool> conflicts_with_other(n_agents, true);
 			vector<bool> finished(n_agents, false);
@@ -653,7 +679,7 @@ plan_loop:
 					}
 				}
 				debug++;
-				//if (debug >= 300000) {
+				//if (debug >= 300) {
 				if (false) {
 					return;
 				}

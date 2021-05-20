@@ -303,7 +303,11 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 		cerr << conflict_plan[0][i].name << "|" << conflict_plan[1][i].name << endl;
 	}
 	cerr << endl;
-
+	for (auto& plan : conflict_plan) {
+		while (plan[plan.size()-1].type == NOOP) {
+			plan.erase(plan.end()-1);
+		}
+	}
 	return {conflict_plan, skip};
 }
 

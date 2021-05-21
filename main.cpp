@@ -98,12 +98,13 @@ int main () {
 		int color_end = line.find(":");
 		string color = line.substr(0, color_end);
 
-		for (int i = color_end+2; i < line.length(); i += 3) {
-			char obj = line[i];
-			if (obj >= '0' and obj <= '9') {
-				agent_colors[obj - '0'] = get_color_value(color);
+		for (int i = color_end; i < line.length(); i++) {
+			if (line[i] == ':' || line[i] == ' ' || line[i] == ',') {
+				continue;
+			} else if (is_box(line[i])) {
+				box_colors[line[i] - 'A'] = get_color_value(color);
 			} else {
-				box_colors[obj - 'A'] = get_color_value(color);
+				agent_colors[line[i] - '0'] = get_color_value(color);
 			}
 		}
 		getline(cin, line);

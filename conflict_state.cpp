@@ -201,7 +201,7 @@ ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 			copy_boxes[box_row][box_col] = ' ';
 			completed_actions[agent] = CAction(action,
 				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col},
-				copy_boxes[box_row][box_col]);
+				copy_boxes[box_dst_row][box_dst_col]);
 		}
 		else if (joint_action[agent].type == ActionType::PULL) {
 			copy_agents_rows[agent] += joint_action[agent].ard;
@@ -216,7 +216,7 @@ ConflictState* ConflictState::apply_action(vector<Action> joint_action) {
 			copy_boxes[box_row][box_col] = ' ';
 			completed_actions[agent] = CAction(action,
 				{agent_rows[agent], agent_cols[agent]}, {box_row, box_col},
-				copy_boxes[box_row][box_col]);
+				copy_boxes[box_dst_row][box_dst_col]);
 		}
 	}
 

@@ -619,14 +619,11 @@ plan_loop:
 								.new_actions = conflict.new_actions[1],
 							};
 							send_msg_to_agent(this->time, sender, msg);
-							// Update solution locally
-							plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+conflict.skip[0]+1);
-							plan.insert(plan.begin()+plan_index, conflict.new_actions[0].begin(), conflict.new_actions[0].end());
-							next_action = plan[plan_index];
-							this->waiting_for_agent = false;
-			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
-				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y,
-				plan.size());
+							msg.conflict_resolved = {
+								.skip = conflict.skip[0],
+								.new_actions = conflict.new_actions[0],
+							};
+							send_msg_to_agent(this->time, this->agent_id, msg);
 							// Tell everyone to check again
 							msg.type = MSG_TYPE_CHECK_AGAIN;
 							broadcast_msg_me(this->time, msg);
@@ -646,10 +643,11 @@ plan_loop:
 						plan.erase(plan.begin()+plan_index, plan.begin()+plan_index+msg.conflict_resolved.skip+1);
 						plan.insert(plan.begin()+plan_index, msg.conflict_resolved.new_actions.begin(), msg.conflict_resolved.new_actions.end());
 						next_action = plan[plan_index];
+						this->conflict_with_agent_id = sender;
+						this->conflict_with_agent_left = msg.conflict_resolved.new_actions.size();
 						this->waiting_for_agent = false;
-			fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
-				next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y,
-				plan.size());
+						fprintf(stderr, "Action agent %d (time %d): %s, (%d, %d)\t%d\n", agent_id, time,
+							next_action.name.c_str(), next_action.agent_pos.x, next_action.agent_pos.y, plan.size());
 						break;
 
 					case MSG_TYPE_STEP_FINISHED:

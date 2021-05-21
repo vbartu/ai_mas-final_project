@@ -48,6 +48,9 @@ class BdiAgent {
 		int plan_index;
 
 		bool waiting_for_agent;
+		int conflict_with_agent_left;
+		int conflict_with_agent_id;
+		vector<bool> conflict_with_agent_manager;
 
 		BdiAgent(int agent_id);
 

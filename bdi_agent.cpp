@@ -263,6 +263,16 @@ conflict_t solve_conflict(umap_t believes, vector<int> agent_ids, vector<vector<
 					break;
 				}
 			}
+			for (int row = 0; row < n_rows; row++) {
+				for (int col = 0; col < n_cols; col++) {
+					char box = boxes[row][col];
+					if (is_box(box)) {
+						if (curr_actions[i].conflicts_goal(CAction(ACTION_NOOP, {row, col}))) {
+							conflict = true;
+						}
+					}
+				}
+			}
 		}
 		if (conflict) {
 			bool end = false;
@@ -677,9 +687,8 @@ plan_loop:
 					}
 				}
 				debug++;
-				//if (debug >= 300) {
-				if (false) {
-					return;
+				if (debug >= 300) {
+					//return;
 				}
 			} // Communication loop
 

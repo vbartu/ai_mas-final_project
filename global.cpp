@@ -6,8 +6,8 @@
 int n_agents;
 int n_rows;
 int n_cols;
-vector<int> agent_colors(10);
-vector<int> box_colors(26);
+vector<int> agent_colors(10, 0);
+vector<int> box_colors(26, 0);
 vector<vector<bool>> walls;
 vector<vector<char>> goals;
 umap_t goals_map;

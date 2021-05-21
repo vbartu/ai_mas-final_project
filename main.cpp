@@ -171,6 +171,28 @@ int main () {
 
 	n_agents = agent_rows.size();
 
+	for (auto box_color : box_colors) {
+		bool has_agent = false;
+		for (auto agent_color : agent_colors) {
+			if (box_color == agent_color) {
+				has_agent = true;
+				break;
+			}
+		}
+		if (!has_agent) {
+			for (int row = 0; row < n_rows; row++) {
+				for (int col = 0; col < n_cols; col++) {
+					if (get_color(boxes[row][col]) == box_color) {
+						boxes[row][col] = ' ';
+						initial_map.erase({row, col});
+						walls[row][col] = true;
+					}
+				}
+			}
+		}
+	}
+
+
 	getline(cin, line);
 	for (int i = 0; line[0] != '#'; i++) {
 		for (int j = 0; j < line.length(); j++) {

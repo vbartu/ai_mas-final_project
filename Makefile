@@ -9,7 +9,7 @@ CXXFLAGS = -O3 -lpthread
 LDFLAGS = -lpthread
 
 # src file dir
-SRC_DIR = ${CURDIR}
+SRC_DIR = ${CURDIR}/src
 
 # obj file dir
 OBJ_DIR = ${CURDIR}/build

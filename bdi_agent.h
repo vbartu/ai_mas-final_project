@@ -2,6 +2,7 @@
 #define __BDI_AGENT_H
 
 #include <vector>
+#include <pthread.h>
 
 #include "bdi_agent_state.h"
 #include "global.h"

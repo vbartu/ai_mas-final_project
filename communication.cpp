@@ -1,5 +1,6 @@
 #include <queue>
 #include <assert.h>
+#include <pthread.h>
 
 #include "communication.h"
 
